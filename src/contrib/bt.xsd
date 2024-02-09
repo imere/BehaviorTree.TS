@@ -1,0 +1,263 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns="bt" targetNamespace="bt">
+
+  <xs:element name="root">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="Tree" />
+        </xs:choice>
+      </xs:sequence>
+
+      <xs:attribute name="BTTS_format" fixed="4" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="AlwaysFailure" />
+
+  <xs:element name="AlwaysSuccess" />
+
+  <xs:element name="Delay">
+    <xs:complexType>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="ms">
+        <xs:simpleType>
+          <xs:union memberTypes="xs:nonNegativeInteger T_Blackboard" />
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ForceFailure">
+    <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ForceSuccess">
+    <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="IfThenElse">
+    <xs:complexType>
+      <xs:choice minOccurs="2" maxOccurs="3">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Inverter">
+    <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ParallelAll">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Precondition">
+    <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="if" type="T_NotEmpty" use="required" />
+      <xs:attribute name="else">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="SUCCESS"></xs:enumeration>
+            <xs:enumeration value="FAILURE"></xs:enumeration>
+            <xs:enumeration value="RUNNING"></xs:enumeration>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="RunOnce">
+    <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Sequence">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="SetBlackboard">
+    <xs:complexType>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="value" use="required">
+        <xs:simpleType>
+          <xs:union memberTypes="xs:string T_Blackboard" />
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="outputKey" use="required">
+        <xs:simpleType>
+          <xs:union memberTypes="xs:string T_Blackboard" />
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Sleep">
+    <xs:complexType>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="ms" use="required">
+        <xs:simpleType>
+          <xs:union memberTypes="xs:nonNegativeInteger T_Blackboard" />
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Subtree">
+    <xs:complexType>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="id" type="xs:IDREF" use="required" />
+      <xs:attribute name="_autoremap" type="xs:boolean" />
+      <xs:anyAttribute processContents="lax" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Switch2">
+    <xs:complexType>
+      <xs:choice minOccurs="3" maxOccurs="3">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="variable" type="T_NotEmpty" use="required" />
+      <xs:attribute name="case_1" type="T_NotEmpty" />
+      <xs:attribute name="case_2" type="T_NotEmpty" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Switch3">
+    <xs:complexType>
+      <xs:choice minOccurs="4" maxOccurs="4">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="variable" type="T_NotEmpty" use="required" />
+      <xs:attribute name="case_1" type="T_NotEmpty" />
+      <xs:attribute name="case_2" type="T_NotEmpty" />
+      <xs:attribute name="case_3" type="T_NotEmpty" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Switch4">
+    <xs:complexType>
+      <xs:choice minOccurs="5" maxOccurs="5">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="variable" type="T_NotEmpty" use="required" />
+      <xs:attribute name="case_1" type="T_NotEmpty" />
+      <xs:attribute name="case_2" type="T_NotEmpty" />
+      <xs:attribute name="case_3" type="T_NotEmpty" />
+      <xs:attribute name="case_4" type="T_NotEmpty" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Switch5">
+    <xs:complexType>
+      <xs:choice minOccurs="6" maxOccurs="6">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="variable" type="T_NotEmpty" use="required" />
+      <xs:attribute name="case_1" type="T_NotEmpty" />
+      <xs:attribute name="case_2" type="T_NotEmpty" />
+      <xs:attribute name="case_3" type="T_NotEmpty" />
+      <xs:attribute name="case_4" type="T_NotEmpty" />
+      <xs:attribute name="case_5" type="T_NotEmpty" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Switch6">
+    <xs:complexType>
+      <xs:choice minOccurs="7" maxOccurs="7">
+        <xs:any />
+      </xs:choice>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="variable" type="T_NotEmpty" use="required" />
+      <xs:attribute name="case_1" type="T_NotEmpty" />
+      <xs:attribute name="case_2" type="T_NotEmpty" />
+      <xs:attribute name="case_3" type="T_NotEmpty" />
+      <xs:attribute name="case_4" type="T_NotEmpty" />
+      <xs:attribute name="case_5" type="T_NotEmpty" />
+      <xs:attribute name="case_6" type="T_NotEmpty" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Timeout">
+    <xs:complexType>
+      <xs:attributeGroup ref="AG_PrePost" />
+      <xs:attribute name="ms" use="required">
+        <xs:simpleType>
+          <xs:union memberTypes="xs:nonNegativeInteger T_Blackboard" />
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Tree">
+    <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
+      <xs:attribute name="id" type="xs:ID" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+
+  <xs:simpleType name="T_NotEmpty">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"></xs:minLength>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="T_Blackboard">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\{\S+\}"></xs:pattern>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:attributeGroup name="AG_PrePost">
+    <xs:attribute name="_failureIf" type="T_NotEmpty" />
+    <xs:attribute name="_successIf" type="T_NotEmpty" />
+    <xs:attribute name="_skipIf" type="T_NotEmpty" />
+    <xs:attribute name="_while" type="T_NotEmpty" />
+    <xs:attribute name="_onHalted" type="T_NotEmpty" />
+    <xs:attribute name="_onFailure" type="T_NotEmpty" />
+    <xs:attribute name="_onSuccess" type="T_NotEmpty" />
+    <xs:attribute name="_post" type="T_NotEmpty" />
+  </xs:attributeGroup>
+
+</xs:schema>
