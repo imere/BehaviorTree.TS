@@ -51,13 +51,13 @@ export class PortInfo {
 
   description = "";
 
-  private _defaultValue?: Primitive;
+  private _defaultValue?: Primitive | object;
 
   get defaultValue() {
     return this._defaultValue;
   }
 
-  set defaultValue(value: any) {
+  set defaultValue(value: Primitive | object) {
     this._defaultValue = value;
     this._defaultValueString = value === undefined ? "" : String(value);
   }
@@ -84,9 +84,11 @@ export function isAllowedPortName(name: string): boolean {
   return !matchPattern(forbidPortNamePatterns, name);
 }
 
-export function createPortInfo<
-  V extends Primitive | { [K: PropertyKey]: unknown; toString(this: V): string }
->(direction: PortDirection, description = "", defaultValue?: V): PortInfo {
+export function createPortInfo<V extends Primitive | { toString(this: V): string }>(
+  direction: PortDirection,
+  description = "",
+  defaultValue?: V
+): PortInfo {
   const ret = new PortInfo(direction);
 
   ret.description = description;
@@ -96,10 +98,12 @@ export function createPortInfo<
   return ret;
 }
 
-export function createPort<
-  K extends string,
-  V extends Primitive | { [K: PropertyKey]: unknown; toString(this: V): string }
->(direction: PortDirection, name: K, description = "", defaultValue?: V): [K, PortInfo] {
+export function createPort<K extends string, V extends Primitive | { toString(this: V): string }>(
+  direction: PortDirection,
+  name: K,
+  description = "",
+  defaultValue?: V
+): [K, PortInfo] {
   if (!isAllowedPortName(name)) {
     throw new Error(
       `The name of a port must not be [${forbidPortNamePatterns}], and must start with an alphabetic character. Underscore is reserved.`
@@ -111,21 +115,21 @@ export function createPort<
 
 export function createInputPort<
   K extends string,
-  V extends Primitive | { [K: PropertyKey]: unknown; toString(this: V): string }
+  V extends Primitive | { toString(this: V): string }
 >(name: K, description?: string, defaultValue?: V) {
   return createPort(PortDirection.INPUT, name, description, defaultValue);
 }
 
 export function createOutputPort<
   K extends string,
-  V extends Primitive | { [K: PropertyKey]: unknown; toString(this: V): string }
+  V extends Primitive | { toString(this: V): string }
 >(name: K, description?: string, defaultValue?: V) {
   return createPort(PortDirection.OUTPUT, name, description, defaultValue);
 }
 
 export function createBidiPort<
   K extends string,
-  V extends Primitive | { [K: PropertyKey]: unknown; toString(this: V): string }
+  V extends Primitive | { toString(this: V): string }
 >(name: K, description?: string, defaultValue?: V) {
   return createPort(PortDirection.INOUT, name, description, defaultValue);
 }

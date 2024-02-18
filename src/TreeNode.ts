@@ -203,7 +203,7 @@ export class TreeNode extends Emitter<{
     // BUT, it the port type is a string, then an empty string might be
     // a valid value
     const portValueStr = this.config.input.get(key);
-    if (!portValueStr) {
+    if (portValueStr === undefined) {
       const portManifest = this.config.manifest?.ports.get(key);
       return portManifest?.defaultValue as R;
     }
