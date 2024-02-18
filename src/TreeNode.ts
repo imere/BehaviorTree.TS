@@ -119,10 +119,10 @@ export function assignDefaultRemapping<T extends CtorWithPorts<TreeNode>>(
 ): void {
   for (const [name, { direction }] of getProvidedPorts(Ctor)) {
     if (direction !== PortDirection.OUTPUT) {
-      config.input.set(name, "=");
+      config.input.set(name, "{=}");
     }
     if (direction !== PortDirection.INPUT) {
-      config.output.set(name, "=");
+      config.output.set(name, "{=}");
     }
   }
 }
@@ -183,7 +183,7 @@ export class TreeNode extends Emitter<{
   }
 
   static getRemappedKey(portName: string, remappedPort: string): string | undefined {
-    if (remappedPort === "=") return portName;
+    if (remappedPort === "{=}") return portName;
     const ret = this.stripBlackboardPointer(remappedPort);
     if (ret !== undefined) return ret;
   }
@@ -214,21 +214,17 @@ export class TreeNode extends Emitter<{
 
     const remappedKey = TreeNode.getRemappedKey(key, portValueStr);
 
-    try {
-      if (remappedKey === undefined) return parseString(portValueStr, param);
+    if (remappedKey === undefined) return parseString(portValueStr, param);
 
-      if (!this.config.blackboard) return;
+    if (!this.config.blackboard) return;
 
-      param.hints.remap = true;
+    param.hints.remap = true;
 
-      const value = this.config.blackboard.get(remappedKey);
+    const value = this.config.blackboard.get(remappedKey);
 
-      if (value !== undefined) {
-        if (typeof value === "string") return parseString(value, param);
-        return value;
-      }
-    } catch {
-      return;
+    if (value !== undefined) {
+      if (typeof value === "string") return parseString(value, param);
+      return value;
     }
   }
 
@@ -265,7 +261,7 @@ export class TreeNode extends Emitter<{
       );
     }
     let remappedKey = this.config.output.get(key)!;
-    if (remappedKey === "=") {
+    if (remappedKey === "{=}") {
       this.config.blackboard.set(key, value);
       return;
     }

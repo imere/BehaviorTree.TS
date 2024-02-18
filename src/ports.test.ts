@@ -282,52 +282,119 @@ describe("PortTest", () => {
 
   test("DefaultInputVectors", async () => {
     @ImplementPorts
-    class NodeWithDefaultVectors extends SyncActionNode {
+    class NodeWithDefaultPoints extends SyncActionNode {
       static providedPorts() {
         return new PortList([
-          createInputPort("vectorA", "default value is [1,2]", new Point2D(1, 2)),
-          createInputPort("vectorB", "default value inside key {vect}", "{vect}"),
-          createInputPort("vectorC", "default value is [5,6]", "5,6"),
+          createInputPort("input"),
+          createInputPort("pointA", undefined, new Point2D(1, 2)),
+          createInputPort("pointB", undefined, "{point}"),
+          createInputPort("pointC", undefined, "5,6"),
+          createInputPort("pointD", undefined, "{=}"),
         ]);
       }
 
       protected override tick(): NodeUserStatus {
         const convert: Converter<Point2D> = (_, { hints: { remap } }) =>
           remap ? _ : Point2D.from(_);
-        const vectA = this.getInput<Point2D>("vectorA", convert);
-        const vectB = this.getInput<Point2D>("vectorB", convert);
-        const vectC = this.getInput<Point2D>("vectorC", convert);
 
-        if (
-          vectA &&
-          vectA.x === 1 &&
-          vectA.y === 2 &&
-          vectB &&
-          vectB.x === 3 &&
-          vectB.y === 4 &&
-          vectC &&
-          vectC.x === 5 &&
-          vectC.y === 6
-        ) {
-          return NodeStatus.SUCCESS;
+        const vectA = this.getInputOrThrow<Point2D>("pointA", convert);
+        if (vectA.x !== 1 || vectA.y !== 2) {
+          throw new Error("failed pointA");
         }
 
-        return NodeStatus.FAILURE;
+        const vectB = this.getInputOrThrow<Point2D>("pointB", convert);
+        if (vectB.x !== 3 || vectB.y !== 4) {
+          throw new Error("failed pointB");
+        }
+
+        const vectC = this.getInputOrThrow<Point2D>("pointC", convert);
+        if (vectC.x !== 5 || vectC.y !== 6) {
+          throw new Error("failed pointC");
+        }
+
+        const vectD = this.getInputOrThrow<Point2D>("pointD", convert);
+        if (vectD.x !== 7 || vectD.y !== 8) {
+          throw new Error("failed pointD");
+        }
+
+        const input = this.getInputOrThrow<Point2D>("input", convert);
+        if (input.x !== 9 || input.y !== 10) {
+          throw new Error("failed input");
+        }
+
+        return NodeStatus.SUCCESS;
       }
     }
 
     const xml = `
     <root BTTS_format="4" >
       <Tree>
-        <NodeWithDefaultVectors/>
+        <NodeWithDefaultPoints input="9,10"/>
       </Tree>
     </root>
     `;
 
     const factory = new TreeFactory();
-    factory.registerNodeType(NodeWithDefaultVectors, NodeWithDefaultVectors.name);
+    factory.registerNodeType(NodeWithDefaultPoints, NodeWithDefaultPoints.name);
     const tree = factory.createTreeFromXML(xml);
-    tree.subtrees[0].blackboard.set("vect", new Point2D(3, 4));
+
+    tree.subtrees[0].blackboard.set("point", new Point2D(3, 4));
+    tree.subtrees[0].blackboard.set("pointD", new Point2D(7, 8));
+
+    expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
+  });
+
+  test("DefaultInputStrings", async () => {
+    @ImplementPorts
+    class NodeWithDefaultStrings extends SyncActionNode {
+      static providedPorts() {
+        return new PortList([
+          createInputPort("input"),
+          createInputPort("msgA", undefined, "hello"),
+          createInputPort("msgB", undefined, "{msg}"),
+          createInputPort("msgC", undefined, "{=}"),
+        ]);
+      }
+
+      protected override tick(): NodeUserStatus {
+        const msgA = this.getInputOrThrow("msgA");
+        if (msgA !== "hello") {
+          throw new Error("failed msgA");
+        }
+
+        const msgB = this.getInputOrThrow("msgB");
+        if (msgB !== "ciao") {
+          throw new Error("failed msgB");
+        }
+
+        const msgC = this.getInputOrThrow("msgC");
+        if (msgC !== "hola") {
+          throw new Error("failed msgC");
+        }
+
+        const input = this.getInputOrThrow("input");
+        if (input !== "from XML") {
+          throw new Error("failed input");
+        }
+
+        return NodeStatus.SUCCESS;
+      }
+    }
+
+    const xml = `
+    <root BTTS_format="4" >
+      <Tree>
+        <NodeWithDefaultStrings input="from XML"/>
+      </Tree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.registerNodeType(NodeWithDefaultStrings, NodeWithDefaultStrings.name);
+    const tree = factory.createTreeFromXML(xml);
+
+    tree.subtrees[0].blackboard.set("msg", "ciao");
+    tree.subtrees[0].blackboard.set("msgC", "hola");
 
     expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
   });

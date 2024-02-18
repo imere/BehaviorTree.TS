@@ -96,7 +96,7 @@ describe("BlackboardTest", () => {
     expect(() => missing_out.executeTick()).toThrow();
 
     config.blackboard = bb;
-    config.output.set("out_port", "=");
+    config.output.set("out_port", "{=}");
 
     const node = new BB_TestNode("good_one", config);
     node.executeTick();
