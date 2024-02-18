@@ -1,7 +1,13 @@
 import { SyncActionNode } from "./ActionNode";
 import { TreeFactory } from "./TreeFactory";
-import { NodeConfig } from "./TreeNode";
-import { ImplementPorts, NodeStatus, NodeUserStatus, PortList, createInputPort } from "./basic";
+import type { Converter, NodeConfig } from "./TreeNode";
+import {
+  ImplementPorts,
+  NodeStatus,
+  PortList,
+  createInputPort,
+  type NodeUserStatus,
+} from "./basic";
 
 describe("PortTest", () => {
   @ImplementPorts
@@ -214,40 +220,50 @@ describe("PortTest", () => {
     expect(states).toEqual([3, 7]);
   });
 
-  @ImplementPorts
-  class DefaultTestAction extends SyncActionNode {
-    static providedPorts() {
-      return new PortList([
-        createInputPort("answer", undefined, 42),
-        createInputPort("greeting", undefined, "hello"),
-        createInputPort("pos", undefined, {
-          x: 1,
-          y: 2,
-          toString() {
-            const { x, y } = this;
-            return JSON.stringify({ x, y });
-          },
-        }),
-      ]);
+  class Point2D {
+    constructor(public x = 0, public y = 0) {}
+
+    toString() {
+      const { x, y } = this;
+      return JSON.stringify({ x, y });
     }
 
-    protected override tick(): NodeUserStatus {
-      const answer = this.getInputOrThrow("answer", Number);
-      if (answer !== 42) return NodeStatus.FAILURE;
-
-      const greet = this.getInputOrThrow("greeting", String);
-      if (greet !== "hello") return NodeStatus.FAILURE;
-
-      const point = this.getInputOrThrow("pos", (_): { x: number; y: number } =>
-        typeof _ === "string" ? JSON.parse(_) : _
-      );
-      if (point.x !== 1 || point.y !== 2) return NodeStatus.FAILURE;
-
-      return NodeStatus.SUCCESS;
+    static from(source: string) {
+      try {
+        return JSON.parse(source);
+      } catch {
+        return new Point2D(...source.split(",").map(Number));
+      }
     }
   }
 
-  test("DefaultInput", async () => {
+  test("DefaultInput", () => {
+    @ImplementPorts
+    class DefaultTestAction extends SyncActionNode {
+      static providedPorts() {
+        return new PortList([
+          createInputPort("answer", undefined, 42),
+          createInputPort("greeting", undefined, "hello"),
+          createInputPort("pos", undefined, new Point2D(1, 2)),
+        ]);
+      }
+
+      protected override tick(): NodeUserStatus {
+        const answer = this.getInputOrThrow("answer", Number);
+        if (answer !== 42) return NodeStatus.FAILURE;
+
+        const greet = this.getInputOrThrow("greeting", String);
+        if (greet !== "hello") return NodeStatus.FAILURE;
+
+        const point = this.getInputOrThrow("pos", (_): { x: number; y: number } => {
+          return typeof _ === "string" ? JSON.parse(_) : _;
+        });
+        if (point.x !== 1 || point.y !== 2) return NodeStatus.FAILURE;
+
+        return NodeStatus.SUCCESS;
+      }
+    }
+
     const xml = `
     <root BTTS_format="4" >
       <Tree>
@@ -260,6 +276,58 @@ describe("PortTest", () => {
     factory.registerNodeType(DefaultTestAction, DefaultTestAction.name);
 
     const tree = factory.createTreeFromXML(xml);
+
+    expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
+  });
+
+  test("DefaultInputVectors", async () => {
+    @ImplementPorts
+    class NodeWithDefaultVectors extends SyncActionNode {
+      static providedPorts() {
+        return new PortList([
+          createInputPort("vectorA", "default value is [1,2]", new Point2D(1, 2)),
+          createInputPort("vectorB", "default value inside key {vect}", "{vect}"),
+          createInputPort("vectorC", "default value is [5,6]", "5,6"),
+        ]);
+      }
+
+      protected override tick(): NodeUserStatus {
+        const convert: Converter<Point2D> = (_, { hints: { remap } }) =>
+          remap ? _ : Point2D.from(_);
+        const vectA = this.getInput<Point2D>("vectorA", convert);
+        const vectB = this.getInput<Point2D>("vectorB", convert);
+        const vectC = this.getInput<Point2D>("vectorC", convert);
+
+        if (
+          vectA &&
+          vectA.x === 1 &&
+          vectA.y === 2 &&
+          vectB &&
+          vectB.x === 3 &&
+          vectB.y === 4 &&
+          vectC &&
+          vectC.x === 5 &&
+          vectC.y === 6
+        ) {
+          return NodeStatus.SUCCESS;
+        }
+
+        return NodeStatus.FAILURE;
+      }
+    }
+
+    const xml = `
+    <root BTTS_format="4" >
+      <Tree>
+        <NodeWithDefaultVectors/>
+      </Tree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.registerNodeType(NodeWithDefaultVectors, NodeWithDefaultVectors.name);
+    const tree = factory.createTreeFromXML(xml);
+    tree.subtrees[0].blackboard.set("vect", new Point2D(3, 4));
 
     expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
   });

@@ -471,13 +471,16 @@ export class Parser {
 
       // use default value if available for empty ports. Only inputs
       for (const [portName, portInfo] of manifest.ports) {
-        if (
-          portInfo.direction !== PortDirection.OUTPUT &&
-          !config.input.has(portName) &&
-          portInfo.defaultValue !== undefined
-        ) {
-          // if (portInfo.defaultValueString !== undefined)
-          config.input.set(portName, portInfo.defaultValueString);
+        const { direction, defaultValue, defaultValueString } = portInfo;
+
+        if (defaultValue !== undefined) {
+          if (direction !== PortDirection.OUTPUT && !config.input.has(portName)) {
+            config.input.set(portName, defaultValueString);
+          }
+
+          if (direction !== PortDirection.INPUT && !config.output.has(portName)) {
+            config.output.set(portName, defaultValueString);
+          }
         }
       }
 
