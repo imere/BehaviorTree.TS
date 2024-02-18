@@ -4,7 +4,7 @@
   "description": "A (mostly) copy & paste repo of [BehaviorTree.CPP]",
   "private": true,
   "scripts": {
-    "postinstall": "husky install && patch-package",
+    "postinstall": "husky install",
     "prepare": "husky",
     "test": "jest",
     "lint": "eslint  \".\\**\\*.{ts,tsx,js}\""
