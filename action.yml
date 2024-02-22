@@ -1,0 +1,18 @@
+name: run-test
+description: "run testing"
+runs:
+  using: "composite"
+  steps:
+    - id: unix
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        yarn
+        yarn test
+
+    - id: windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        yarn
+        yarn test
