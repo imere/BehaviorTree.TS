@@ -233,4 +233,35 @@ describe("Preconditions", () => {
     tree.rootBlackboard!.set("check", false);
     expect(tree.tickOnce()).resolves.toBe(NodeStatus.RUNNING);
   });
+
+  test("Remapping", () => {
+    const xml = `
+    <root BTTS_format="4">
+      <Tree id="Main">
+        <Sequence>
+          <Script  code="value=1" />
+          <Subtree id="Sub1" param="{value}"/>
+          <TestA _skipIf="value!=1" />
+        </Sequence>
+      </Tree>
+
+      <Tree id="Sub1">
+        <Sequence>
+          <TestB _skipIf="param!=1" />
+        </Sequence>
+      </Tree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+
+    const counters: number[] = [0, 0];
+    registerTestTick(factory, "Test", counters);
+
+    factory.registerTreeFromXML(xml);
+    const tree = factory.createTree("Main");
+
+    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(counters).toEqual([1, 1]);
+  });
 });
