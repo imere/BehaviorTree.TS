@@ -395,8 +395,20 @@ export class Parser {
     const manifest: TreeNodeManifest | undefined = this.factory.manifests.get(typeId);
 
     const portRemap: PortsRemapping = new Map();
-    for (const [key, value] of Object.entries((json.props || {}) as Record<string, string>)) {
-      if (isAllowedPortName(key)) portRemap.set(key, value);
+    for (const [portName, portValue] of Object.entries(
+      (json.props || {}) as Record<string, string>
+    )) {
+      if (isAllowedPortName(portName)) {
+        if (manifest) {
+          if (!manifest.ports.has(portName)) {
+            throw new Error(
+              `A port with name [${portName}] is found in the XML, but not in the providedPorts()`
+            );
+          }
+        }
+
+        portRemap.set(portName, portValue);
+      }
     }
 
     const config = new NodeConfig();
