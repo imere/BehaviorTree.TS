@@ -1,6 +1,6 @@
-import { StatefulActionNode } from "./ActionNode";
+import { StatefulActionNode, SyncActionNode } from "./ActionNode";
 import { TreeFactory } from "./TreeFactory";
-import { NodeStatus, PortList, type NodeUserStatus } from "./basic";
+import { NodeStatus, PortList, createOutputPort, type NodeUserStatus } from "./basic";
 import { registerTestTick } from "./testing/helper";
 
 describe("PreconditionsDecorator", () => {
@@ -235,33 +235,53 @@ describe("Preconditions", () => {
   });
 
   test("Remapping", () => {
+    class SimpleOutput extends SyncActionNode {
+      static providedPorts(): PortList {
+        return new PortList([createOutputPort("output")]);
+      }
+
+      protected override tick(): NodeUserStatus {
+        this.setOutput("output", true);
+        return NodeStatus.SUCCESS;
+      }
+    }
+
     const xml = `
     <root BTTS_format="4">
       <Tree id="Main">
         <Sequence>
-          <Script  code="value=1" />
+          <SimpleOutput  output="{param}" />
+          <Script  code="value=true" />
+          <Subtree id="Sub1" param="{param}"/>
           <Subtree id="Sub1" param="{value}"/>
-          <TestA _skipIf="value!=1" />
+          <Subtree id="Sub1" param="true"/>
+          <TestA/>
         </Sequence>
       </Tree>
 
       <Tree id="Sub1">
         <Sequence>
-          <TestB _skipIf="param!=1" />
+          <Subtree id="Sub2" _skipIf="String(param) != 'true'" />
+        </Sequence>
+      </Tree>
+        
+      <Tree id="Sub2">
+        <Sequence>
+          <TestB/>
         </Sequence>
       </Tree>
     </root>
     `;
 
     const factory = new TreeFactory();
-
     const counters: number[] = [0, 0];
+    factory.registerNodeType(SimpleOutput, SimpleOutput.name);
     registerTestTick(factory, "Test", counters);
 
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("Main");
 
     expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
-    expect(counters).toEqual([1, 1]);
+    expect(counters).toEqual([1, 3]);
   });
 });
