@@ -12,6 +12,11 @@ export function attachGlobals(target: object, extra?: [name: string, value: unkn
     ["JSON", JSON],
     ["Math", Math],
     ["Number", Number],
+    ["BigInt", BigInt],
+    ["String", String],
+    ["Boolean", Boolean],
+    ["Object", Object],
+    ["Array", Array],
     ["undefined", undefined],
   ] satisfies Array<[keyof typeof globalThis, unknown]>;
 
