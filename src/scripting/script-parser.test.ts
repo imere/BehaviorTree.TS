@@ -78,7 +78,37 @@ describe("ParserTest", () => {
     expect(variables.get("C")).toBe("left    ");
   });
 
-  test("Enums", () => {
+  test("EnumsBasic", () => {
+    const environment: Environment = [Blackboard.create(), new Map()];
+
+    const context = createTreeExecutionContext(environment);
+
+    const GetResult = (script: string) =>
+      Runtime.runInContext(context, supportScriptExpression(script));
+
+    enum Color {
+      RED = 1,
+      BLUE = 3,
+      GREEN = 5,
+    }
+
+    environment[1].set(Color[Color.RED], Color.RED);
+    environment[1].set(Color[Color.BLUE], Color.BLUE);
+    environment[1].set(Color[Color.GREEN], Color.GREEN);
+
+    GetResult("A=RED");
+    GetResult("B=RED");
+    GetResult("C=BLUE");
+
+    expect(GetResult("A===B")).toBe(true);
+    expect(GetResult("A!==C")).toBe(true);
+
+    expect(GetResult("A")).toBe(Color.RED);
+    expect(GetResult("B")).toBe(Color.RED);
+    expect(GetResult("C")).toBe(Color.BLUE);
+  });
+
+  test("EnumsXML", () => {
     const factory = new TreeFactory();
 
     const xml = `

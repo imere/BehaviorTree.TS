@@ -1,4 +1,5 @@
 import { SyncActionNode } from "./ActionNode";
+import { ConditionNode } from "./ConditionNode";
 import { TreeFactory } from "./TreeFactory";
 import {
   ImplementPorts,
@@ -92,5 +93,74 @@ describe("Enums", () => {
     const tree = factory.createTreeFromXML(xml);
 
     expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+  });
+
+  enum BatteryStatus {
+    NO_FAULT,
+    LOW_BATTERY,
+  }
+
+  class PrintEnum extends ConditionNode {
+    static providedPorts(): PortList {
+      return new PortList([createInputPort("enum")]);
+    }
+
+    protected override tick(): NodeUserStatus {
+      const enumValue = this.getInput<BatteryStatus>("enum");
+      if (enumValue === undefined) return NodeStatus.FAILURE;
+      return NodeStatus.SUCCESS;
+    }
+  }
+
+  class IsHealthOk extends ConditionNode {
+    static providedPorts(): PortList {
+      return new PortList([createInputPort("check_name"), createInputPort("health")]);
+    }
+
+    protected override tick(): NodeUserStatus {
+      const health = this.getInput<BatteryStatus>("health", (_) => JSON.parse(_));
+      if (health === undefined) return NodeStatus.FAILURE;
+
+      if (health) return NodeStatus.SUCCESS;
+      else return NodeStatus.FAILURE;
+    }
+  }
+
+  test("SubtreeRemapping", () => {
+    const xml = `
+    <root BTTS_format="4">
+      <Tree id="MainTree">
+        <Sequence>
+          <Script code=" fault_status = NO_FAULT " />
+          <PrintEnum enum="{fault_status}"/>
+          <Subtree id="FailsafeCheck"
+            health="false"
+            trigger_fault_status="LOW_BATTERY"
+            fault_status="{=}" />
+          <PrintEnum enum="{fault_status}"/>
+        </Sequence>
+      </Tree>
+
+      <Tree id="FailsafeCheck">
+        <ForceSuccess>
+          <IsHealthOk
+              health="{health}"
+              _onFailure="fault_status = $E.get(trigger_fault_status)"/>
+        </ForceSuccess>
+      </Tree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.registerScriptingEnums(BatteryStatus);
+    factory.registerNodeType(PrintEnum, PrintEnum.name);
+    factory.registerNodeType(IsHealthOk, IsHealthOk.name);
+
+    factory.registerTreeFromXML(xml);
+
+    const tree = factory.createTree("MainTree");
+
+    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(tree.rootBlackboard!.get("fault_status")).toBe(BatteryStatus.LOW_BATTERY);
   });
 });

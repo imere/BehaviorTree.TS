@@ -11,7 +11,13 @@ import {
   TreeNodeManifest,
   convertToString as convertConditionToString,
 } from "./TreeNode";
-import { NodeType, PortDirection, convertNodeNameToNodeType, isAllowedPortName } from "./basic";
+import {
+  NodeType,
+  PortDirection,
+  convertNodeNameToNodeType,
+  isAllowedPortName,
+  type PortList,
+} from "./basic";
 import { SubtreeNode } from "./decorators/SubtreeNode";
 import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports";
 import { getEnumKeys } from "./utils";
@@ -30,10 +36,16 @@ export interface TreeNodeObject {
   children?: TreeNodeObject[];
 }
 
+interface SubtreeModel {
+  ports: PortList;
+}
+
 export class Parser {
   private openedDocuments: TreeObject[];
 
   private treeRoots: Map<string, TreeNodeObject>;
+
+  private subtreeModels = new Map<string, SubtreeModel>();
 
   private suffixCount = 0;
 
@@ -291,7 +303,6 @@ export class Parser {
     ): void => {
       // create the node
       const node = this.createNodeFromObject(json, blackboard, parent, prefix, tree);
-
       subtree.nodes.push(node);
 
       // common case: iterate through all children
@@ -300,52 +311,76 @@ export class Parser {
           recursiveStep(node, subtree, prefix, child);
         }
       } else {
-        const newBoard = Blackboard.create(blackboard);
+        const newBB = Blackboard.create(blackboard);
+        const subtreeId = json.props?.id;
+        const subtreeRemapping = new Map();
+        let doAutoRemap = false;
 
         const mappedKeys = new Set<string>();
 
-        for (const [attrName, attrValue] of Object.entries(json.props || {})) {
+        for (let [attrName, attrValue] of Object.entries(json.props || {})) {
+          if (attrValue === "{=}") attrValue = `{${attrName}}`;
+
           if (attrName === "_autoremap") {
-            newBoard.enableAutoRemapping(
-              typeof attrValue === "string" ? JSON.parse(attrValue) : Boolean(attrValue || "")
-            );
+            doAutoRemap =
+              typeof attrValue === "string" ? JSON.parse(attrValue) : Boolean(attrValue || "");
+            newBB.enableAutoRemapping(doAutoRemap);
             continue;
           }
 
           if (!isAllowedPortName(attrName)) continue;
 
-          const portName = TreeNode.stripBlackboardPointer(attrValue || "");
-          if (portName !== undefined) {
-            // do remapping
-            newBoard.addSubtreeRemapping(attrName, portName);
-          } else {
-            // constant string: just set that constant value into the BB
-            newBoard.set(attrName, attrValue);
-            // TODO: should we evaluate the string as expression
-            // newBoard.set(
-            //   attrName,
-            //   Runtime.runInContext(
-            //     createTreeExecutionContext([node.config.blackboard, node.config.enums]),
-            //     supportScriptExpression(attrValue || "")
-            //   )
-            // );
+          subtreeRemapping.set(attrName, attrValue);
+        }
+        // check if this subtree has a model. If it does,
+        // we want to check if all the mandatory ports were remapped and
+        // add default ones, if necessary
+        if (this.subtreeModels.has(subtreeId!)) {
+          const subtreeModel = this.subtreeModels.get(subtreeId!)!;
+          const subtreeModelPorts = subtreeModel.ports;
+          // check if:
+          // - remapping contains mandatory ports
+          // - if any of these has default value
+          for (const [portName, portInfo] of subtreeModelPorts) {
+            // don't override existing remapping
+            if (!subtreeRemapping.has(portName) && !doAutoRemap) {
+              // remapping is not explicitly defined in the XML: use the model
+              if (typeof portInfo.defaultValue === undefined) {
+                throw new Error(
+                  [
+                    'In the <TreeNodesModel> the <Subtree id="',
+                    subtreeId,
+                    '"> is defining a mandatory port called [',
+                    portName,
+                    "], but you are not remapping it",
+                  ].join("")
+                );
+              } else {
+                subtreeRemapping.set(portName, portInfo.defaultValue);
+              }
+            }
           }
-          mappedKeys.add(attrName);
         }
 
-        const subtreeId = json.props?.id;
-        let subtreeName = subtree.name;
-        if (subtreeName) subtreeName += "/";
-        subtreeName += json.props?.name || `${subtreeId}::${node.uid}`;
+        for (const [attrName, attrValue] of subtreeRemapping) {
+          if (TreeNode.stripBlackboardPointer(attrValue)) {
+            // do remapping
+            const portName = TreeNode.stripBlackboardPointer(attrValue)!;
+            newBB.addSubtreeRemapping(attrName, portName);
+          } else {
+            // constant string: just set that constant value into the BB
+            // IMPORTANT: this must not be autoremapped!!!
+            newBB.enableAutoRemapping(false);
+            newBB.set(attrName, attrValue);
+            newBB.enableAutoRemapping(doAutoRemap);
+          }
+        }
 
-        this.recursivelyCreateSubtree(
-          subtreeId,
-          subtreeName,
-          `${subtreeName}/`,
-          tree,
-          newBoard,
-          node
-        );
+        let subtreePath = subtree.name;
+        if (subtreePath) subtreePath += "/";
+        subtreePath += json.props?.name || `${subtreeId}::${node.uid}`;
+
+        this.recursivelyCreateSubtree(subtreeId, subtreePath, `${subtreePath}/`, tree, newBB, node);
       }
     };
 
@@ -354,6 +389,8 @@ export class Parser {
     }
 
     const root = this.treeRoots.get(treeId)!.children![0];
+
+    //-------- start recursion -----------
 
     // Append a new subtree to the list
     const newTree = new Subtree();
