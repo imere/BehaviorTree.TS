@@ -18,7 +18,7 @@ import { NodeStatus, type NodeUserStatus } from "../basic";
 export class ReactiveSequence extends ControlNode {
   private runningChild = -1;
 
-  private static throwIfMultipleRunning = true;
+  private static throwIfMultipleRunning = false;
 
   private static enableException(enable: boolean): void {
     ReactiveSequence.throwIfMultipleRunning = enable;
