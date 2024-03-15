@@ -316,8 +316,6 @@ export class Parser {
         const subtreeRemapping = new Map();
         let doAutoRemap = false;
 
-        const mappedKeys = new Set<string>();
-
         for (let [attrName, attrValue] of Object.entries(json.props || {})) {
           if (attrValue === "{=}") attrValue = `{${attrName}}`;
 
