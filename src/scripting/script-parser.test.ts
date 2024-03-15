@@ -14,8 +14,8 @@ import { SaySomething } from "../sample/DummyNodes";
 import { registerTestTick } from "../testing/helper";
 import {
   Environment,
-  createRuntimeExecutionContext,
   createRuntimeExecutor,
+  createTreeExecutionContext,
   supportScriptExpression,
 } from "./parser";
 
@@ -23,7 +23,7 @@ describe("ParserTest", () => {
   test("Equations", () => {
     const env: Environment = [Blackboard.create(), new Map()];
 
-    const context = createRuntimeExecutionContext(env);
+    const context = createTreeExecutionContext(env);
 
     const GetResult = (script: string) =>
       Runtime.runInContext(context, supportScriptExpression(script));

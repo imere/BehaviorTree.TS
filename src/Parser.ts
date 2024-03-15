@@ -321,6 +321,14 @@ export class Parser {
           } else {
             // constant string: just set that constant value into the BB
             newBoard.set(attrName, attrValue);
+            // TODO: should we evaluate the string as expression
+            // newBoard.set(
+            //   attrName,
+            //   Runtime.runInContext(
+            //     createTreeExecutionContext([node.config.blackboard, node.config.enums]),
+            //     supportScriptExpression(attrValue || "")
+            //   )
+            // );
           }
           mappedKeys.add(attrName);
         }

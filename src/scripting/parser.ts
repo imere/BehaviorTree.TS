@@ -41,7 +41,7 @@ export function createReturnFunction<T = unknown>(returns: T): () => T {
     : (new Function(`return (${returns})`) as () => T);
 }
 
-export function createRuntimeExecutionContext([Blackboard, EnumsTable]: Environment) {
+export function createTreeExecutionContext([Blackboard, EnumsTable]: Environment) {
   const base = Object.defineProperties(createEmptyObject(), {
     $B: {
       writable: false,
@@ -77,7 +77,7 @@ export function createRuntimeExecutionContext([Blackboard, EnumsTable]: Environm
 export function createRuntimeExecutor(env: Environment, script: string) {
   const fn = Runtime.createFunction(script, []);
 
-  const context = createRuntimeExecutionContext(env);
+  const context = createTreeExecutionContext(env);
 
   return (argObject: object = createEmptyObject()) => {
     return Runtime.runInContext(Object.assign(context, argObject), fn);
