@@ -25,6 +25,7 @@ import {
 import { FallbackNode } from "./controls/FallbackNode";
 import { IfThenElseNode } from "./controls/IfThenElseNode";
 import { ParallelAllNode } from "./controls/ParallelAllNode";
+import { ReactiveFallback } from "./controls/ReactiveFallback";
 import { ReactiveSequence } from "./controls/ReactiveSequence";
 import { SequenceNode } from "./controls/SequenceNode";
 import { createSwitchNode } from "./controls/SwitchNode";
@@ -98,6 +99,7 @@ export class TreeFactory {
 
     this.registerNodeType(ParallelAllNode, "ParallelAll");
     this.registerNodeType(ReactiveSequence, "ReactiveSequence", new PortList());
+    this.registerNodeType(ReactiveFallback, "ReactiveFallback", new PortList());
     this.registerNodeType(IfThenElseNode, "IfThenElse", new PortList());
 
     this.registerNodeType(InverterNode, "Inverter", new PortList());

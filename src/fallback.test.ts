@@ -1,6 +1,7 @@
 import { NodeConfig } from "./TreeNode";
 import { NodeStatus } from "./basic";
 import { FallbackNode } from "./controls/FallbackNode";
+import { ReactiveFallback } from "./controls/ReactiveFallback";
 import { AsyncActionTest } from "./testing/ActionTestNode";
 import { ConditionTestNode } from "./testing/ConditionTestNode";
 
@@ -44,6 +45,66 @@ describe("SimpleFallbackTest", () => {
     expect(state).toBe(NodeStatus.RUNNING);
     expect(condition.status).toBe(NodeStatus.FAILURE);
     expect(action.status).toBe(NodeStatus.RUNNING);
+  });
+});
+
+describe("ReactiveFallbackTest", () => {
+  let root: ReactiveFallback;
+  let condition_1: ConditionTestNode;
+  let condition_2: ConditionTestNode;
+  let action_1: AsyncActionTest;
+
+  beforeEach(() => {
+    root = new ReactiveFallback("root_fallback", new NodeConfig());
+    condition_1 = new ConditionTestNode("condition_1");
+    condition_2 = new ConditionTestNode("condition_2");
+    action_1 = new AsyncActionTest("action_1", new NodeConfig(), 100);
+
+    root.addChild(condition_1);
+    root.addChild(condition_2);
+    root.addChild(action_1);
+  });
+
+  test("Condition1ToTrue", () => {
+    condition_1.setExpectedResult(NodeStatus.FAILURE);
+    condition_2.setExpectedResult(NodeStatus.FAILURE);
+
+    let state = root.executeTick();
+
+    expect(state).toBe(NodeStatus.RUNNING);
+    expect(condition_1.status).toBe(NodeStatus.IDLE);
+    expect(condition_2.status).toBe(NodeStatus.IDLE);
+    expect(action_1.status).toBe(NodeStatus.RUNNING);
+
+    condition_1.setExpectedResult(NodeStatus.SUCCESS);
+
+    state = root.executeTick();
+
+    expect(state).toBe(NodeStatus.SUCCESS);
+    expect(condition_1.status).toBe(NodeStatus.IDLE);
+    expect(condition_2.status).toBe(NodeStatus.IDLE);
+    expect(action_1.status).toBe(NodeStatus.IDLE);
+  });
+
+  test("Condition2ToTrue", () => {
+    condition_1.setExpectedResult(NodeStatus.FAILURE);
+    condition_2.setExpectedResult(NodeStatus.FAILURE);
+
+    let state = root.executeTick();
+
+    expect(state).toBe(NodeStatus.RUNNING);
+    expect(condition_1.status).toBe(NodeStatus.IDLE);
+    expect(condition_2.status).toBe(NodeStatus.IDLE);
+    expect(action_1.status).toBe(NodeStatus.RUNNING);
+
+    condition_2.setExpectedResult(NodeStatus.SUCCESS);
+
+    state = root.executeTick();
+
+    expect(state).toBe(NodeStatus.SUCCESS);
+    expect(condition_1.status).toBe(NodeStatus.IDLE);
+    expect(condition_2.status).toBe(NodeStatus.IDLE);
+    expect(action_1.status).toBe(NodeStatus.IDLE);
   });
 });
 
