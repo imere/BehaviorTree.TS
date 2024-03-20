@@ -26,7 +26,6 @@ export class Blackboard extends Map<PropertyKey, Entry> {
     if (!super.has(key)) {
       const entry = this.createEntry(key, new PortInfo(PortDirection.INOUT));
       entry.value = value;
-      super.set(key, entry);
     } else {
       super.get(key)!.value = value;
     }
@@ -61,19 +60,21 @@ export class Blackboard extends Map<PropertyKey, Entry> {
   createEntry(key: PropertyKey, info: PortInfo): Entry {
     if (super.has(key)) return super.get(key)!;
 
-    let entry: Entry = new Entry(info);
-
     // manual remapping first
     if (this.internalToExternal.has(key)) {
       const remappedKey = this.internalToExternal.get(key)!;
-      if (this.parent) entry = this.parent.createEntry(remappedKey, info);
-    } else if (this.autoRemapping && !isPrivateKey(key)) {
-      if (this.parent) entry = this.parent.createEntry(key, info);
-    } else {
-      // not remapped, not found. Create locally.
-      entry = new Entry(info);
-      entry.value = info.defaultValue;
+      if (this.parent) return this.parent.createEntry(remappedKey, info);
+      throw new Error("Missing parent blackboard");
     }
+    // autoremapping second (excluding private keys)
+    if (this.autoRemapping && !isPrivateKey(key)) {
+      if (this.parent) return this.parent.createEntry(key, info);
+      throw new Error("Missing parent blackboard");
+    }
+    // not remapped, not found. Create locally.
+    const entry = new Entry(info);
+    entry.value = info.defaultValue;
+
     super.set(key, entry);
     return entry;
   }
