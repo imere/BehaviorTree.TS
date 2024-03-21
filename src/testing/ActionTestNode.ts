@@ -35,7 +35,11 @@ export class AsyncActionTest extends StatefulActionNode {
     return new PortList();
   }
 
-  constructor(name: string, config: NodeConfig, private deadlineMs = 0) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private deadlineMs = 0
+  ) {
     super(name, config);
   }
 

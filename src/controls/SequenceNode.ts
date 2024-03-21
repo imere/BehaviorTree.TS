@@ -20,7 +20,11 @@ export class SequenceNode extends ControlNode {
 
   private allSkipped = true;
 
-  constructor(name: string, config: NodeConfig, private asynch: boolean = false) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private asynch: boolean = false
+  ) {
     super(name, config);
     this.registrationId = asynch ? "AsyncSequence" : "Sequence";
   }

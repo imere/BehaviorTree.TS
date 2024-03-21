@@ -33,7 +33,11 @@ export class TestNode extends StatefulActionNode {
 
   private executor?: () => void;
 
-  constructor(name: string, config: NodeConfig, private testConfig = new TestNodeConfig()) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private testConfig = new TestNodeConfig()
+  ) {
     super(name, config);
     this.registrationId = "TestNode";
   }

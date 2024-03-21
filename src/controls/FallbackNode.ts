@@ -19,7 +19,11 @@ export class FallbackNode extends ControlNode {
 
   private allSkipped = true;
 
-  constructor(name: string, config: NodeConfig, private asynch: boolean = false) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private asynch: boolean = false
+  ) {
     super(name, config);
     this.registrationId = asynch ? "AsyncFallback" : "Fallback";
   }

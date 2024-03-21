@@ -8,7 +8,11 @@ import {
 } from "../basic";
 
 class Pose2D {
-  constructor(public x: number, public y: number, public theta: number) {}
+  constructor(
+    public x: number,
+    public y: number,
+    public theta: number
+  ) {}
 
   toJSON(): string {
     const { x, y, theta } = this;

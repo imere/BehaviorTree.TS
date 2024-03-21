@@ -53,7 +53,7 @@ export type NodeBuilder = (...args: [name: string, config: NodeConfig]) => TreeN
 export function createBuilder<
   T extends TreeNode,
   C extends ConstructorType<T>,
-  A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]
+  A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
 >(Ctor: C, ...args: A): NodeBuilder {
   return function build(name: string, config: NodeConfig): TreeNode {
     return TreeNode.instantiate(Ctor, name, config, ...args);
@@ -215,17 +215,17 @@ export class TreeFactory {
   registerNodeType<
     T extends TreeNode,
     C extends ConstructorType<T> & Required<CtorWithPorts<T>>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]
+    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
   >(Ctor: C, id: string, ...args: A);
   registerNodeType<
     T extends TreeNode,
     C extends ConstructorType<T>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]
+    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
   >(Ctor: C, id: string, ports: PortList, ...args: A);
   registerNodeType<
     T extends TreeNode,
     C extends ConstructorType<T> & CtorWithPorts<T>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]
+    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
   >(Ctor: C, id: string, ...args: A) {
     let ports = args[0];
     if (ports instanceof PortList) {

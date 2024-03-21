@@ -59,7 +59,11 @@ class PrintToConsole extends SyncActionNode {
     return new PortList([createInputPort("message")]);
   }
 
-  constructor(name: string, config: NodeConfig, private print: (value: unknown) => void) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private print: (value: unknown) => void
+  ) {
     super(name, config);
   }
 

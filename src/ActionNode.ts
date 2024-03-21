@@ -10,7 +10,10 @@ import { NodeStatus, NodeType, type NodeUserStatus } from "./basic";
 export abstract class ActionNodeBase extends LeafNode {
   override type: NodeType = NodeType.Action;
 
-  constructor(name: string, override readonly config: NodeConfig) {
+  constructor(
+    name: string,
+    override readonly config: NodeConfig
+  ) {
     super(name, config);
   }
 }

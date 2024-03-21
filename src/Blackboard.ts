@@ -5,7 +5,10 @@ export function isPrivateKey(key: PropertyKey): key is `_${string}` {
 }
 
 export class Entry {
-  constructor(public portInfo: PortInfo, public value?: any) {}
+  constructor(
+    public portInfo: PortInfo,
+    public value?: any
+  ) {}
 }
 
 export class Blackboard extends Map<PropertyKey, Entry> {

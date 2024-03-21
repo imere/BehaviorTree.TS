@@ -181,7 +181,11 @@ describe("PortTest", () => {
       return new PortList([createInputPort("states")]);
     }
 
-    constructor(name: string, config: NodeConfig, private states: number[]) {
+    constructor(
+      name: string,
+      config: NodeConfig,
+      private states: number[]
+    ) {
       super(name, config);
     }
 
@@ -221,7 +225,10 @@ describe("PortTest", () => {
   });
 
   class Point2D {
-    constructor(public x = 0, public y = 0) {}
+    constructor(
+      public x = 0,
+      public y = 0
+    ) {}
 
     toString() {
       const { x, y } = this;

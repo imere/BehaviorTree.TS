@@ -16,7 +16,11 @@ import { NodeStatus, NodeUserStatus, PortList, createInputPort, isStatusComplete
  * </Delay>
  */
 export class DelayNode extends DecoratorNode {
-  constructor(name: string, config: NodeConfig, private ms: number = 0) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private ms: number = 0
+  ) {
     super(name, config);
     if (!ms) this.readParameterFromPorts = true;
     this.registrationId = "Delay";

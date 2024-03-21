@@ -51,7 +51,7 @@ export function convertToString<T extends typeof PostCondition, K extends PostCo
 ): string;
 export function convertToString<
   T extends typeof PreCondition | typeof PostCondition,
-  K extends PreCondition | PostCondition
+  K extends PreCondition | PostCondition,
 >(o: T, key: K): string {
   switch (o[key]) {
     case "FAILURE_IF":
@@ -134,7 +134,7 @@ export class TreeNode extends Emitter<{
   static instantiate<
     T extends TreeNode,
     C extends ConstructorType<T>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]
+    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
   >(Ctor: C, name: string, config: NodeConfig, ...args: A) {
     return new Ctor(name, config, ...args);
   }
@@ -166,7 +166,10 @@ export class TreeNode extends Emitter<{
     return this.config.path;
   }
 
-  constructor(public readonly name: string, readonly config: NodeConfig) {
+  constructor(
+    public readonly name: string,
+    readonly config: NodeConfig
+  ) {
     super();
   }
 

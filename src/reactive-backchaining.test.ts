@@ -9,7 +9,11 @@ class SimpleCondition extends ConditionNode {
     return new PortList();
   }
 
-  constructor(name: string, config: NodeConfig, private portName: string) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private portName: string
+  ) {
     super(name, config);
   }
 
@@ -25,7 +29,11 @@ class AsyncTestAction extends StatefulActionNode {
 
   private counter = 0;
 
-  constructor(name: string, config: NodeConfig, private portName: string) {
+  constructor(
+    name: string,
+    config: NodeConfig,
+    private portName: string
+  ) {
     super(name, config);
   }
 

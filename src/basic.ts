@@ -115,21 +115,21 @@ export function createPort<K extends string, V extends Primitive | { toString(th
 
 export function createInputPort<
   K extends string,
-  V extends Primitive | { toString(this: V): string }
+  V extends Primitive | { toString(this: V): string },
 >(name: K, description?: string, defaultValue?: V) {
   return createPort(PortDirection.INPUT, name, description, defaultValue);
 }
 
 export function createOutputPort<
   K extends string,
-  V extends Primitive | { toString(this: V): string }
+  V extends Primitive | { toString(this: V): string },
 >(name: K, description?: string, defaultValue?: V) {
   return createPort(PortDirection.OUTPUT, name, description, defaultValue);
 }
 
 export function createBidiPort<
   K extends string,
-  V extends Primitive | { toString(this: V): string }
+  V extends Primitive | { toString(this: V): string },
 >(name: K, description?: string, defaultValue?: V) {
   return createPort(PortDirection.INOUT, name, description, defaultValue);
 }
