@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
+    "build": "tsc -p tsconfig.dev.json",
     "test": "jest",
     "lint": "eslint  \".\\**\\*.{ts,tsx,js}\""
   },
