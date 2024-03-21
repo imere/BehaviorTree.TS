@@ -11,41 +11,75 @@ export class Entry {
   ) {}
 }
 
-export class Blackboard extends Map<PropertyKey, Entry> {
-  private autoRemapping = false;
-
-  private internalToExternal: Map<PropertyKey, string>;
-
-  private constructor(private readonly parent?: Blackboard) {
-    super();
-    this.internalToExternal = new Map();
-  }
-
+export class Blackboard implements Map<PropertyKey, Entry> {
   static create(parent?: Blackboard): Blackboard {
     return new Blackboard(parent);
   }
 
-  _storageSet(key: PropertyKey, value: Entry) {
-    return super.set(key, value);
+  private autoRemapping = false;
+
+  private internalToExternal: Map<PropertyKey, string>;
+
+  _storage = new Map<PropertyKey, Entry>();
+
+  private constructor(private readonly parent?: Blackboard) {
+    this.internalToExternal = new Map();
   }
 
-  override set(key: PropertyKey, value: unknown): this {
-    if (!super.has(key)) {
+  delete(key: PropertyKey): boolean {
+    return this._storage.delete(key);
+  }
+
+  forEach(
+    callbackfn: (value: Entry, key: PropertyKey, map: Map<PropertyKey, Entry>) => void,
+    thisArg?: any
+  ): void {
+    return this._storage.forEach(callbackfn, thisArg);
+  }
+
+  has(key: PropertyKey): boolean {
+    return this._storage.has(key);
+  }
+
+  get size(): number {
+    return this._storage.size;
+  }
+
+  entries(): IterableIterator<[PropertyKey, Entry]> {
+    return this._storage.entries();
+  }
+
+  values(): IterableIterator<Entry> {
+    return this._storage.values();
+  }
+
+  [Symbol.iterator](): IterableIterator<[PropertyKey, Entry]> {
+    return this._storage[Symbol.iterator]();
+  }
+
+  [Symbol.toStringTag]: string = "Blackboard";
+
+  set(key: PropertyKey, value: unknown): this {
+    if (!this._storage.has(key)) {
       const entry = this.createEntry(key, new PortInfo(PortDirection.INOUT));
       entry.value = value;
     } else {
-      super.get(key)!.value = value;
+      this._storage.get(key)!.value = value;
     }
 
     return this;
   }
 
-  override get<R = any>(key: PropertyKey): R | undefined {
+  get<R = any>(key: PropertyKey): R | undefined {
     return this.getEntry(key)?.value;
   }
 
-  override keys(): IterableIterator<PropertyKey> {
-    return super.keys();
+  keys(): IterableIterator<PropertyKey> {
+    return this._storage.keys();
+  }
+
+  clear(): void {
+    this._storage.clear();
   }
 
   enableAutoRemapping(remapping: boolean): void {
@@ -53,7 +87,7 @@ export class Blackboard extends Map<PropertyKey, Entry> {
   }
 
   portInfo(key: PropertyKey): PortInfo | undefined {
-    if (super.has(key)) return super.get(key)!.portInfo;
+    if (this._storage.has(key)) return this._storage.get(key)!.portInfo;
   }
 
   addSubtreeRemapping(internal: string, external: string): void {
@@ -63,10 +97,10 @@ export class Blackboard extends Map<PropertyKey, Entry> {
   cloneInto(dst: Blackboard): void {
     dst.clear();
 
-    for (const [key, entry] of this) {
+    for (const [key, entry] of this._storage) {
       const newEntry = new Entry(entry.portInfo);
       newEntry.value = entry.value;
-      dst._storageSet(key, newEntry);
+      dst._storage.set(key, newEntry);
     }
   }
 
@@ -75,7 +109,7 @@ export class Blackboard extends Map<PropertyKey, Entry> {
    * to the top scope to find already existing entries
    */
   createEntry(key: PropertyKey, info: PortInfo): Entry {
-    if (super.has(key)) return super.get(key)!;
+    if (this._storage.has(key)) return this._storage.get(key)!;
 
     // manual remapping first
     if (this.internalToExternal.has(key)) {
@@ -92,24 +126,24 @@ export class Blackboard extends Map<PropertyKey, Entry> {
     const entry = new Entry(info);
     entry.value = info.defaultValue;
 
-    super.set(key, entry);
+    this._storage.set(key, entry);
     return entry;
   }
 
   getEntry(key: PropertyKey): Entry | undefined {
-    if (super.has(key)) return super.get(key)!;
+    if (this._storage.has(key)) return this._storage.get(key)!;
     // not found. Try autoremapping
     if (this.parent) {
       if (this.internalToExternal.has(key)) {
         const newKey = this.internalToExternal.get(key)!;
         const entry = this.parent.getEntry(newKey);
-        if (entry) super.set(key, entry);
+        if (entry) this._storage.set(key, entry);
         return entry;
       }
 
       if (this.autoRemapping && !isPrivateKey(key)) {
         const entry = this.parent.getEntry(key);
-        if (entry) super.set(key, entry);
+        if (entry) this._storage.set(key, entry);
         return entry;
       }
     }
