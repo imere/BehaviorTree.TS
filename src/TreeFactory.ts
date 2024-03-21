@@ -542,3 +542,20 @@ export class Tree {
     return status;
   }
 }
+
+export function blackboardRestore(backup: Blackboard[], tree: Tree): void {
+  if (backup.length !== tree.subtrees.length) {
+    throw new Error("assert(backup.size() == tree.subtrees.size())");
+  }
+  for (let i = 0; i < tree.subtrees.length; i++) {
+    backup[i].cloneInto(tree.subtrees[i].blackboard);
+  }
+}
+
+export function blackboardBackup(tree: Tree): Blackboard[] {
+  return tree.subtrees.map((sub) => {
+    const ret = Blackboard.create();
+    sub.blackboard.cloneInto(ret);
+    return ret;
+  });
+}

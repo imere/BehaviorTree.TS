@@ -25,6 +25,10 @@ export class Blackboard extends Map<PropertyKey, Entry> {
     return new Blackboard(parent);
   }
 
+  _storageSet(key: PropertyKey, value: Entry) {
+    return super.set(key, value);
+  }
+
   override set(key: PropertyKey, value: unknown): this {
     if (!super.has(key)) {
       const entry = this.createEntry(key, new PortInfo(PortDirection.INOUT));
@@ -54,6 +58,16 @@ export class Blackboard extends Map<PropertyKey, Entry> {
 
   addSubtreeRemapping(internal: string, external: string): void {
     this.internalToExternal.set(internal, external);
+  }
+
+  cloneInto(dst: Blackboard): void {
+    dst.clear();
+
+    for (const [key, entry] of this) {
+      const newEntry = new Entry(entry.portInfo);
+      newEntry.value = entry.value;
+      dst._storageSet(key, newEntry);
+    }
   }
 
   /**

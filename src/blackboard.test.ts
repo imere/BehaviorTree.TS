@@ -1,7 +1,7 @@
 import { SyncActionNode } from "./ActionNode";
 import { Blackboard } from "./Blackboard";
 import { ConditionNode } from "./ConditionNode";
-import { TreeFactory } from "./TreeFactory";
+import { TreeFactory, blackboardBackup, blackboardRestore } from "./TreeFactory";
 import { NodeConfig, assignDefaultRemapping } from "./TreeNode";
 import {
   ImplementPorts,
@@ -11,6 +11,7 @@ import {
   createOutputPort,
   type NodeUserStatus,
 } from "./basic";
+import { SaySomething } from "./sample/DummyNodes";
 
 @ImplementPorts
 class BB_TestNode extends SyncActionNode {
@@ -212,6 +213,59 @@ describe("BlackboardTest", () => {
     const node = new BB_TestNode("good_one", config);
 
     expect(() => node.executeTick()).toThrow();
+  });
+
+  test("BlackboardBackup", async () => {
+    const factory = new TreeFactory();
+
+    const xml = `
+      <root BTTS_format="4" >
+        <Tree id="MySubtree">
+          <Sequence>
+            <Script code=" important_value= sub_value " />
+            <Script code=" my_value=false " />
+            <SaySomething message="{message}" />
+          </Sequence>
+        </Tree>
+        <Tree id="MainTree">
+          <Sequence>
+            <Script code=" my_value=true; another_value='hi' " />
+            <Subtree id="MySubtree" sub_value="true" message="{another_value}" _autoremap="true" />
+          </Sequence>
+        </Tree>
+      </root>
+    `;
+
+    factory.registerNodeType(SaySomething, SaySomething.name);
+    factory.registerTreeFromXML(xml);
+    const tree = factory.createTree("MainTree");
+
+    // Blackboard Backup
+    const bbBackup = blackboardBackup(tree);
+
+    const expectedKeys: PropertyKey[][] = [];
+    for (const sub of tree.subtrees) {
+      expectedKeys.push([...sub.blackboard.keys()]);
+    }
+
+    let status = await tree.tickWhileRunning();
+
+    expect(status).toBe(NodeStatus.SUCCESS);
+
+    // Restore Blackboard
+    expect(bbBackup.length).toBe(tree.subtrees.length);
+    blackboardRestore(bbBackup, tree);
+
+    for (let i = 0; i < tree.subtrees.length; i++) {
+      const keys = [...tree.subtrees[i].blackboard.keys()];
+      expect(expectedKeys[i].length).toBe(keys.length);
+      for (let a = 0; a < keys.length; a++) {
+        expect(expectedKeys[i][a]).toBe(keys[a]);
+      }
+    }
+
+    status = await tree.tickWhileRunning();
+    expect(status).toBe(NodeStatus.SUCCESS);
   });
 });
 
