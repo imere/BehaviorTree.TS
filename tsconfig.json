@@ -14,14 +14,14 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "resolveJsonModule": false,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "noImplicitOverride": true,
     "outDir": "./dist",
-    "allowJs": true,
+    "allowJs": true
   },
   "include": [
     "./src"
