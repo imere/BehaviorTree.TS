@@ -343,7 +343,7 @@ export class Parser {
             // don't override existing remapping
             if (!subtreeRemapping.has(portName) && !doAutoRemap) {
               // remapping is not explicitly defined in the XML: use the model
-              if (typeof portInfo.defaultValue === undefined) {
+              if (typeof portInfo.defaultValue === "undefined") {
                 throw new Error(
                   [
                     'In the <TreeNodesModel> the <Subtree id="',
