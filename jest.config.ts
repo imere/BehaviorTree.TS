@@ -9,4 +9,9 @@ export default {
   // moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
   //   prefix: "<rootDir>/",
   // }),
+  globals: {
+    "ts-jest": {
+      tsConfig: "tsconfig.jest.json",
+    },
+  },
 } as Config;
