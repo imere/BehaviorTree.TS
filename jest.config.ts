@@ -3,15 +3,9 @@ import { type Config } from "jest";
 export default {
   rootDir: ".",
   testEnvironment: "node",
-  preset: "ts-jest",
-  testRegex: /\.test\.ts$/.source,
-  transformIgnorePatterns: ["\\\\node_modules\\\\"],
-  // moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
-  //   prefix: "<rootDir>/",
-  // }),
-  globals: {
-    "ts-jest": {
-      tsConfig: "tsconfig.jest.json",
-    },
+  transform: {
+    [/.ts$/.source]: ["ts-jest", { tsconfig: "tsconfig.jest.json" }],
   },
+  testRegex: /\.test\.ts$/.source,
+  transformIgnorePatterns: [/\\node_modules\\/.source],
 } as Config;
