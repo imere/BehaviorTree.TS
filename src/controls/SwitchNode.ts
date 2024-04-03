@@ -1,12 +1,25 @@
 import { ControlNode } from "../ControlNode";
 import type { Converter, NodeConfig } from "../TreeNode";
-import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic";
+import {
+  NodeStatus,
+  PortList,
+  createInputPort,
+  type CtorWithPorts,
+  type NodeUserStatus,
+} from "../basic";
+import type { ConstructorType } from "../utils";
 
 const getPortValue: Converter<any> = (value: any, { hints: { remap } }) => {
   return remap ? value : JSON.parse(value);
 };
 
-export function createSwitchNode(NUM_CASES: number) {
+declare class ISwitchNode extends ControlNode {
+  static providedPorts(): PortList;
+}
+
+export function createSwitchNode(
+  NUM_CASES: number
+): ConstructorType<ISwitchNode> & Required<CtorWithPorts<ISwitchNode>> {
   return class SwitchNode extends ControlNode {
     static providedPorts() {
       const ports = new PortList<"variable" | `case_${number}`>([createInputPort("variable")]);
