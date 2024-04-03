@@ -1,19 +1,18 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "module": "ESNext",
+    "module": "NodeNext",
     "target": "ESNext",
     "lib": [
       "ESNext"
     ],
-    "declaration": false,
-    "removeComments": true,
+    "declaration": true,
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": false,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
