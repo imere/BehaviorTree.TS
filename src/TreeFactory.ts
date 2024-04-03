@@ -356,7 +356,22 @@ export class TreeFactory {
   }
 
   registerScriptingEnum(name: string, value: number): void {
-    this.scriptingEnums.set(name, value);
+    if (!this.scriptingEnums.has(name)) {
+      this.scriptingEnums.set(name, value);
+    } else {
+      if (this.scriptingEnums.get(name) !== value) {
+        throw new Error(
+          [
+            "Registering the enum [",
+            name,
+            "] twice with different values, first ",
+            this.scriptingEnums.get(name),
+            " and later ",
+            value,
+          ].join("")
+        );
+      }
+    }
   }
 
   registerScriptingEnums(enums: object): void {
