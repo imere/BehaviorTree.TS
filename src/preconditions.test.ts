@@ -261,7 +261,7 @@ describe("Preconditions", () => {
 
       <Tree id="Sub1">
         <Sequence>
-          <Subtree id="Sub2" _skipIf="String(param) != 'true'" />
+          <Subtree id="Sub2" _skipIf="param !== true" />
         </Sequence>
       </Tree>
         

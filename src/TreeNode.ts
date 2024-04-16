@@ -177,7 +177,8 @@ export class TreeNode extends Emitter<{
     return this.config.uid;
   }
 
-  static stripBlackboardPointer(string: string): `{${string}}` | undefined {
+  static stripBlackboardPointer(string: string | undefined): `{${string}}` | undefined {
+    if (typeof string !== "string") return;
     string = string.trim();
     if (string.length < 3) return;
     const ret = /^{(\w+)}$/.exec(string);

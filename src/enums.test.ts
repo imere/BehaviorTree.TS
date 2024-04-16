@@ -145,7 +145,7 @@ describe("Enums", () => {
         <ForceSuccess>
           <IsHealthOk
               health="{health}"
-              _onFailure="fault_status = $E.get(trigger_fault_status)"/>
+              _onFailure="fault_status = trigger_fault_status"/>
         </ForceSuccess>
       </Tree>
     </root>

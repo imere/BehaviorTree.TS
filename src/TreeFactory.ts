@@ -337,13 +337,17 @@ export class TreeFactory {
       );
     }
     this.parser.loadFromXML(xml);
-    const tree = this.parser.instantiateTree(blackboard);
+    const tree = this.parser.instantiateTree(blackboard, undefined, {
+      scriptingEnums: this.scriptingEnums,
+    });
     tree.manifests = this.manifests;
     return tree;
   }
 
   createTree(name: string, blackboard = Blackboard.create()): Tree {
-    const ret = this.parser.instantiateTree(blackboard, name);
+    const ret = this.parser.instantiateTree(blackboard, name, {
+      scriptingEnums: this.scriptingEnums,
+    });
     ret.manifests = this.manifests;
     return ret;
   }

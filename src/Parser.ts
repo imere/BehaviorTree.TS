@@ -20,7 +20,18 @@ import {
 } from "./basic";
 import { SubtreeNode } from "./decorators/SubtreeNode";
 import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports";
+import { type EnumsTable } from "./scripting/parser";
 import { getEnumKeys } from "./utils";
+
+export const convertFromString = (scriptingEnums: EnumsTable, value: string | undefined) => {
+  if (value === undefined) return;
+  if (scriptingEnums.has(value)) return scriptingEnums.get(value);
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
 
 export interface TreeObject {
   name: string;
@@ -254,7 +265,11 @@ export class Parser {
     }
   }
 
-  instantiateTree(rootBlackboard: Blackboard, mainTreeId?: string): Tree {
+  instantiateTree(
+    rootBlackboard: Blackboard,
+    mainTreeId: string | undefined,
+    params: { scriptingEnums: EnumsTable }
+  ): Tree {
     const ret: Tree = new Tree();
 
     if (!mainTreeId) {
@@ -274,12 +289,13 @@ export class Parser {
     }
 
     this.recursivelyCreateSubtree(
-      mainTreeId!,
+      mainTreeId,
       "",
       "",
       ret,
       rootBlackboard,
-      new TreeNode("", new NodeConfig())
+      new TreeNode("", new NodeConfig()),
+      params
     );
 
     ret.initialize();
@@ -293,7 +309,8 @@ export class Parser {
     prefixPath: string,
     tree: Tree,
     blackboard: Blackboard,
-    rootNode: TreeNode
+    rootNode: TreeNode,
+    params: { scriptingEnums: EnumsTable }
   ): void {
     const recursiveStep = (
       parent: TreeNode,
@@ -320,15 +337,14 @@ export class Parser {
           if (attrValue === "{=}") attrValue = `{${attrName}}`;
 
           if (attrName === "_autoremap") {
-            doAutoRemap =
-              typeof attrValue === "string" ? JSON.parse(attrValue) : Boolean(attrValue || "");
+            doAutoRemap = convertFromString(params.scriptingEnums, attrValue);
             newBB.enableAutoRemapping(doAutoRemap);
             continue;
           }
 
           if (!isAllowedPortName(attrName)) continue;
 
-          subtreeRemapping.set(attrName, attrValue);
+          subtreeRemapping.set(attrName, convertFromString(params.scriptingEnums, attrValue));
         }
         // check if this subtree has a model. If it does,
         // we want to check if all the mandatory ports were remapped and
@@ -367,9 +383,9 @@ export class Parser {
             newBB.addSubtreeRemapping(attrName, portName);
           } else {
             // constant string: just set that constant value into the BB
-            // IMPORTANT: this must not be autoremapped!!!
+            // IMPORTANT: this must not be auto remapped!!!
             newBB.enableAutoRemapping(false);
-            newBB.set(attrName, attrValue);
+            newBB.set(attrName, convertFromString(params.scriptingEnums, attrValue));
             newBB.enableAutoRemapping(doAutoRemap);
           }
         }
@@ -378,7 +394,15 @@ export class Parser {
         if (subtreePath) subtreePath += "/";
         subtreePath += json.props?.name || `${subtreeId}::${node.uid}`;
 
-        this.recursivelyCreateSubtree(subtreeId, subtreePath, `${subtreePath}/`, tree, newBB, node);
+        this.recursivelyCreateSubtree(
+          subtreeId,
+          subtreePath,
+          `${subtreePath}/`,
+          tree,
+          newBB,
+          node,
+          params
+        );
       }
     };
 
@@ -470,7 +494,7 @@ export class Parser {
       id: number
     ) => {
       const script = json.props?.[attrName];
-      if (script) conditions.set(id, String(script));
+      if (script) conditions.set(id, script);
     };
 
     for (let i = 0, len = getEnumKeys(PreCondition).length; i < len; i++) {
@@ -564,9 +588,10 @@ export class Parser {
 export function buildTreeFromObject(
   factory: TreeFactory,
   json: TreeObject,
-  blackboard: Blackboard
+  blackboard: Blackboard,
+  params: { scriptingEnums: EnumsTable }
 ): Tree {
   const parser = new Parser(factory);
   parser.loadFromObject(json);
-  return parser.instantiateTree(blackboard);
+  return parser.instantiateTree(blackboard, undefined, params);
 }

@@ -1,4 +1,5 @@
 import { SyncActionNode } from "../ActionNode";
+import { convertFromString } from "../Parser";
 import { TreeNode, type NodeConfig } from "../TreeNode";
 import {
   NodeStatus,
@@ -24,7 +25,7 @@ export class SetBlackboardNode extends SyncActionNode {
   override tick(): NodeUserStatus {
     const outputKey = this.getInputOrThrow("outputKey");
 
-    const valueStr = this.config.input.get("value") || "";
+    const valueStr = this.config.input.get("value");
 
     const strippedKey = TreeNode.stripBlackboardPointer(valueStr);
 
@@ -42,11 +43,7 @@ export class SetBlackboardNode extends SyncActionNode {
 
       dstEntry!.value = srcEntry.value;
     } else {
-      if (this.config.enums.has(valueStr)) {
-        this.config.blackboard.set(outputKey, this.config.enums.get(valueStr));
-      } else {
-        this.config.blackboard.set(outputKey, JSON.parse(valueStr));
-      }
+      this.config.blackboard.set(outputKey, convertFromString(this.config.enums, valueStr));
     }
 
     return NodeStatus.SUCCESS;
