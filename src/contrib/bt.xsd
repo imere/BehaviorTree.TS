@@ -19,6 +19,9 @@
 
   <xs:element name="Delay">
     <xs:complexType>
+      <xs:choice>
+        <xs:any />
+      </xs:choice>
       <xs:attributeGroup ref="AG_PrePost" />
       <xs:attribute name="ms">
         <xs:simpleType>
