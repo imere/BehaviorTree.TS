@@ -75,7 +75,7 @@ class PrintToConsole extends SyncActionNode {
 }
 
 describe("Subtree", () => {
-  test("SiblingPorts_BehaviorTree.CPPIssue_72", () => {
+  test("SiblingPorts_BehaviorTree.CPPIssue_72", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute="MainTree">
         <Tree id="MainTree">
@@ -98,11 +98,11 @@ describe("Subtree", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(tree.subtrees.length).toBe(3);
   });
 
-  test("GoodRemapping", () => {
+  test("GoodRemapping", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute="MainTree">
         <Tree id="MainTree">
@@ -125,7 +125,7 @@ describe("Subtree", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
   test("BadRemapping", () => {
@@ -220,7 +220,7 @@ describe("Subtree", () => {
     expect(tree_bad_out.tickWhileRunning()).rejects.toThrow();
   });
 
-  test("SubtreePlusA", () => {
+  test("SubtreePlusA", async () => {
     const xml = `
     <root BTTS_format="4" >
         <Tree id="MainTree">
@@ -245,10 +245,10 @@ describe("Subtree", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("MainTree");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
-  test("SubtreePlusB", () => {
+  test("SubtreePlusB", async () => {
     const xml = `
     <root BTTS_format="4" >
         <Tree id="MainTree">
@@ -274,10 +274,10 @@ describe("Subtree", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("MainTree");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
-  test("SubtreePlusD", () => {
+  test("SubtreePlusD", async () => {
     const config = new NodeConfig();
     config.blackboard = Blackboard.create();
 
@@ -302,7 +302,7 @@ describe("Subtree", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("MainTree", config.blackboard);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
   test("ScriptRemap", async () => {
@@ -330,7 +330,7 @@ describe("Subtree", () => {
     expect(tree.subtrees.map((_) => _.blackboard.get("value"))).toEqual([1, 1]);
   });
 
-  test("SubtreeBehaviorTree.CPPIssue592", () => {
+  test("SubtreeBehaviorTree.CPPIssue592", async () => {
     const xml = `
     <root BTTS_format="4" >
         <Tree id="Outer_Tree">
@@ -357,11 +357,11 @@ describe("Subtree", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("Outer_Tree");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(counters).toEqual([2]);
   });
 
-  test("BehaviorTree.CPPIssue653_SetBlackboard", () => {
+  test("BehaviorTree.CPPIssue653_SetBlackboard", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
         <Tree id="MainTree">
@@ -381,10 +381,10 @@ describe("Subtree", () => {
     factory.registerNodeType(Assert, Assert.name);
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBeDefined();
+    expect(await tree.tickWhileRunning()).toBeDefined();
   });
 
-  test("RemappingBehaviorTree.CPPIssue696", () => {
+  test("RemappingBehaviorTree.CPPIssue696", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
       <Tree id="Subtree1">
@@ -416,11 +416,11 @@ describe("Subtree", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("MainTree");
 
-    expect(tree.tickWhileRunning()).resolves.toBeDefined();
+    expect(await tree.tickWhileRunning()).toBeDefined();
     expect(lines).toEqual(["foo1", "bar", "foo2", "bar"]);
   });
 
-  test("PrivateAutoRemapping", () => {
+  test("PrivateAutoRemapping", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
       <Tree id="Subtree">
@@ -447,7 +447,7 @@ describe("Subtree", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("MainTree");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.FAILURE);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE);
     expect(lines).toEqual(["hello"]);
   });
 });

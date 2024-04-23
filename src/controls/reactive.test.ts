@@ -46,7 +46,7 @@ describe("Reactive", () => {
     expect(counters).toEqual([3, 3, 3, 1, 1, 1]);
   });
 
-  test("PreTickHooks", () => {
+  test("PreTickHooks", async () => {
     const xml = `
       <root BTTS_format="4" >
         <Tree id="MainTree">
@@ -70,6 +70,6 @@ describe("Reactive", () => {
       }
     });
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 });

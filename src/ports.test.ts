@@ -31,7 +31,7 @@ describe("PortTest", () => {
     }
   }
 
-  test("DefaultPorts", () => {
+  test("DefaultPorts", async () => {
     const xml = `
     <root BTTS_format="4" >
       <Tree id="MainTree">
@@ -47,10 +47,10 @@ describe("PortTest", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
-  test("MissingPort", () => {
+  test("MissingPort", async () => {
     const xml = `
     <root BTTS_format="4" >
       <Tree id="MainTree">
@@ -66,7 +66,7 @@ describe("PortTest", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.FAILURE);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE);
   });
 
   test("WrongPort", () => {
@@ -86,7 +86,7 @@ describe("PortTest", () => {
     expect(() => factory.createTreeFromXML(xml)).toThrow();
   });
 
-  test("Descriptions", () => {
+  test("Descriptions", async () => {
     const xml = `
     <root BTTS_format="4" >
       <Tree id="MainTree" _description="this is my tree" >
@@ -108,7 +108,7 @@ describe("PortTest", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("MainTree");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.FAILURE); // failure because in_port_B="99"
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE); // failure because in_port_B="99"
   });
 
   @ImplementPorts
@@ -139,7 +139,7 @@ describe("PortTest", () => {
     }
   }
 
-  test("EmptyPort", () => {
+  test("EmptyPort", async () => {
     const xml = `
     <root BTTS_format="4" >
       <Tree id="MainTree" _description="this is my tree" >
@@ -157,7 +157,7 @@ describe("PortTest", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.FAILURE);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE);
   });
 
   @ImplementPorts
@@ -199,7 +199,7 @@ describe("PortTest", () => {
     }
   }
 
-  test("SubtreeStringInput_BehaviorTree.CPPIssue489", () => {
+  test("SubtreeStringInput_BehaviorTree.CPPIssue489", async () => {
     const xml = `
     <root BTTS_format="4" >
       <Tree id="Main">
@@ -220,7 +220,7 @@ describe("PortTest", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("Main");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(states).toEqual([3, 7]);
   });
 
@@ -244,7 +244,7 @@ describe("PortTest", () => {
     }
   }
 
-  test("DefaultInput", () => {
+  test("DefaultInput", async () => {
     @ImplementPorts
     class DefaultTestAction extends SyncActionNode {
       static providedPorts() {
@@ -284,7 +284,7 @@ describe("PortTest", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickOnce()).toBe(NodeStatus.SUCCESS);
   });
 
   test("DefaultInputVectors", async () => {
@@ -348,7 +348,7 @@ describe("PortTest", () => {
     tree.subtrees[0].blackboard.set("point", new Point2D(3, 4));
     tree.subtrees[0].blackboard.set("pointD", new Point2D(7, 8));
 
-    expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickOnce()).toBe(NodeStatus.SUCCESS);
   });
 
   test("DefaultInputStrings", async () => {
@@ -403,6 +403,6 @@ describe("PortTest", () => {
     tree.subtrees[0].blackboard.set("msg", "ciao");
     tree.subtrees[0].blackboard.set("msgC", "hola");
 
-    expect(tree.tickOnce()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickOnce()).toBe(NodeStatus.SUCCESS);
   });
 });

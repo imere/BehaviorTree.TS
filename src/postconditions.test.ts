@@ -2,7 +2,7 @@ import { TreeFactory } from "./TreeFactory";
 import { NodeStatus } from "./basic";
 
 describe("PostConditions", () => {
-  test("BasicTest", () => {
+  test("BasicTest", async () => {
     const factory = new TreeFactory();
 
     const xml = `
@@ -27,7 +27,7 @@ describe("PostConditions", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(tree.rootBlackboard!.get("B")).toBe(42);
     expect(tree.rootBlackboard!.get("C")).toBe(42);

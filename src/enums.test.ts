@@ -92,7 +92,7 @@ describe("Enums", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
   enum BatteryStatus {
@@ -126,7 +126,7 @@ describe("Enums", () => {
     }
   }
 
-  test("SubtreeRemapping", () => {
+  test("SubtreeRemapping", async () => {
     const xml = `
     <root BTTS_format="4">
       <Tree id="MainTree">
@@ -160,7 +160,7 @@ describe("Enums", () => {
 
     const tree = factory.createTree("MainTree");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(tree.rootBlackboard!.get("fault_status")).toBe(BatteryStatus.LOW_BATTERY);
   });
 });

@@ -5,7 +5,7 @@ import { AsyncActionTest } from "./testing/ActionTestNode";
 import { registerTestTick } from "./testing/helper";
 
 describe("SkippingLogic", () => {
-  test("Sequence", () => {
+  test("Sequence", async () => {
     const factory = new TreeFactory();
     const counters = Array.from<number>({ length: 2 });
     registerTestTick(factory, "Test", counters);
@@ -23,11 +23,11 @@ describe("SkippingLogic", () => {
     `;
 
     const tree = factory.createTreeFromXML(xml);
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(counters).toEqual([0, 1]);
   });
 
-  test("SkipAll", () => {
+  test("SkipAll", async () => {
     const factory = new TreeFactory();
     const counters = Array.from<number>({ length: 3 });
     registerTestTick(factory, "Test", counters);
@@ -47,11 +47,11 @@ describe("SkippingLogic", () => {
     const tree = factory.createTreeFromXML(xml);
     tree.rootBlackboard!.set("A", 1);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SKIPPED);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SKIPPED);
     expect(counters).toEqual([0, 0, 0]);
   });
 
-  test("SkipSubtree", () => {
+  test("SkipSubtree", async () => {
     const factory = new TreeFactory();
     const counters = Array.from<number>({ length: 2 });
     registerTestTick(factory, "Test", counters);
@@ -77,11 +77,11 @@ describe("SkippingLogic", () => {
 
     tree.rootBlackboard!.set("A", 1);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(counters).toEqual([1, 0]);
   });
 
-  test("ReactiveSingleChild", () => {
+  test("ReactiveSingleChild", async () => {
     const xml = `
     <root BTTS_format="4" >
         <Tree id="Untitled">
@@ -98,7 +98,7 @@ describe("SkippingLogic", () => {
 
     const tree = factory.createTreeFromXML(xml, rootBlackboard);
 
-    expect(tree.tickWhileRunning()).resolves.toBeDefined();
+    expect(await tree.tickWhileRunning()).toBeDefined();
   });
 
   test("SkippingReactiveSequence", async () => {
@@ -188,7 +188,7 @@ describe("SkippingLogic", () => {
     for (const xml of [xml_noskip, xml_skip]) {
       factory.clearRegisteredTrees();
       const tree = factory.createTreeFromXML(xml);
-      expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+      expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     }
 
     expect(counters).toEqual([1, 0]);

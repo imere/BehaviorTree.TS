@@ -56,7 +56,7 @@ class AsyncTestAction extends StatefulActionNode {
 }
 
 describe("ReactiveBackchaining", () => {
-  test("EnsureWarm", () => {
+  test("EnsureWarm", async () => {
     // This test shows the basic structure of a PPA: a fallback
     // of a postcondition and an action to make that
     //  postcondition true.
@@ -89,19 +89,19 @@ describe("ReactiveBackchaining", () => {
     blackboard.set("holding_jacket", true);
 
     // first tick: not warm, have a jacket: start wearing it
-    expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.RUNNING);
+    expect(await tree.tickExactlyOnce()).toBe(NodeStatus.RUNNING);
     expect(blackboard.get("is_warm")).toBe(false);
 
     // second tick: not warm (still wearing)
-    expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.RUNNING);
+    expect(await tree.tickExactlyOnce()).toBe(NodeStatus.RUNNING);
     expect(blackboard.get("is_warm")).toBe(false);
 
     // third tick: warm (wearing succeeded)
-    expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickExactlyOnce()).toBe(NodeStatus.SUCCESS);
     expect(blackboard.get("is_warm")).toBe(true);
 
     // fourth tick: still warm (just the condition ticked)
-    expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickExactlyOnce()).toBe(NodeStatus.SUCCESS);
 
     // expect(observer.getStatistics("warm").failure_count).toBe(3);
     // expect(observer.getStatistics("warm").success_count).toBe(1);
@@ -113,7 +113,7 @@ describe("ReactiveBackchaining", () => {
   });
 });
 
-test("EnsureWarmWithEnsureHoldingHacket", () => {
+test("EnsureWarmWithEnsureHoldingHacket", async () => {
   // This test backchains on HoldingHacket => EnsureHoldingHacket to iteratively add reactivity and functionality to the tree.
   // The general structure of the PPA remains the same.
   const xml_text = `
@@ -155,26 +155,26 @@ test("EnsureWarmWithEnsureHoldingHacket", () => {
   tree.subtrees[1].blackboard.set("near_closet", true);
 
   // first tick: not warm, no jacket, start GrabJacket
-  expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.RUNNING);
+  expect(await tree.tickExactlyOnce()).toBe(NodeStatus.RUNNING);
   expect(tree.subtrees[0].blackboard.get("is_warm")).toBe(false);
   expect(tree.subtrees[1].blackboard.get("holding_jacket")).toBe(false);
   expect(tree.subtrees[1].blackboard.get("near_closet")).toBe(true);
 
   // second tick: still GrabJacket
-  expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.RUNNING);
+  expect(await tree.tickExactlyOnce()).toBe(NodeStatus.RUNNING);
 
   // third tick: GrabJacket succeeded, start wearing
-  expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.RUNNING);
+  expect(await tree.tickExactlyOnce()).toBe(NodeStatus.RUNNING);
   expect(tree.subtrees[0].blackboard.get("is_warm")).toBe(false);
   expect(tree.subtrees[1].blackboard.get("holding_jacket")).toBe(true);
 
   // fourth tick: still WearingJacket
-  expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.RUNNING);
+  expect(await tree.tickExactlyOnce()).toBe(NodeStatus.RUNNING);
 
   // fifth tick: warm (WearingJacket succeeded)
-  expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.SUCCESS);
+  expect(await tree.tickExactlyOnce()).toBe(NodeStatus.SUCCESS);
   expect(tree.subtrees[0].blackboard.get("is_warm")).toBe(true);
 
   // sixr tick: still warm (just the condition ticked)
-  expect(tree.tickExactlyOnce()).resolves.toBe(NodeStatus.SUCCESS);
+  expect(await tree.tickExactlyOnce()).toBe(NodeStatus.SUCCESS);
 });

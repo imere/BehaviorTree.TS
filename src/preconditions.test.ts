@@ -4,7 +4,7 @@ import { NodeStatus, PortList, createOutputPort, type NodeUserStatus } from "./b
 import { registerTestTick } from "./testing/helper";
 
 describe("PreconditionsDecorator", () => {
-  test("Integers", () => {
+  test("Integers", async () => {
     const factory = new TreeFactory();
     const counters: number[] = [0, 0, 0];
     registerTestTick(factory, "Test", counters);
@@ -30,12 +30,12 @@ describe("PreconditionsDecorator", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(counters).toEqual([1, 0, 1]);
   });
 
-  test("DoubleEquals", () => {
+  test("DoubleEquals", async () => {
     const factory = new TreeFactory();
     const counters: number[] = [0, 0, 0];
     registerTestTick(factory, "Test", counters);
@@ -64,12 +64,12 @@ describe("PreconditionsDecorator", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(counters).toEqual([1, 0, 1]);
   });
 
-  test("DoubleEquals", () => {
+  test("DoubleEquals", async () => {
     const factory = new TreeFactory();
     const counters: number[] = [0, 0, 0];
     registerTestTick(factory, "Test", counters);
@@ -98,12 +98,12 @@ describe("PreconditionsDecorator", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(counters).toEqual([1, 0, 1]);
   });
 
-  test("StringEquals", () => {
+  test("StringEquals", async () => {
     const factory = new TreeFactory();
     const counters: number[] = [0, 0];
     registerTestTick(factory, "Test", counters);
@@ -130,14 +130,14 @@ describe("PreconditionsDecorator", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(counters).toEqual([0, 1]);
   });
 });
 
 describe("Preconditions", () => {
-  test("Basic", () => {
+  test("Basic", async () => {
     const factory = new TreeFactory();
     const counters: number[] = [0, 0, 0, 0];
     registerTestTick(factory, "Test", counters);
@@ -160,7 +160,7 @@ describe("Preconditions", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(counters).toEqual([0, 1, 0, 1]);
   });
@@ -195,7 +195,7 @@ describe("Preconditions", () => {
     expect(counters).toEqual([1, 1, 1]);
   });
 
-  test("BehaviorTree.CPPIssue615_NoSkipWhenRunning_B", () => {
+  test("BehaviorTree.CPPIssue615_NoSkipWhenRunning_B", async () => {
     class KeepRunning extends StatefulActionNode {
       override onStart(): NodeUserStatus {
         return NodeStatus.RUNNING;
@@ -223,18 +223,18 @@ describe("Preconditions", () => {
     const tree = factory.createTreeFromXML(xml);
 
     tree.rootBlackboard!.set("check", false);
-    expect(tree.tickOnce()).resolves.toBe(NodeStatus.SKIPPED);
+    expect(await tree.tickOnce()).toBe(NodeStatus.SKIPPED);
 
     // Should not be skipped anymore
     tree.rootBlackboard!.set("check", true);
-    expect(tree.tickOnce()).resolves.toBe(NodeStatus.RUNNING);
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
 
     // skipIf should be ignored, because KeepRunning is RUNNING and not IDLE
     tree.rootBlackboard!.set("check", false);
-    expect(tree.tickOnce()).resolves.toBe(NodeStatus.RUNNING);
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
   });
 
-  test("Remapping", () => {
+  test("Remapping", async () => {
     class SimpleOutput extends SyncActionNode {
       static providedPorts(): PortList {
         return new PortList([createOutputPort("output")]);
@@ -281,7 +281,7 @@ describe("Preconditions", () => {
     factory.registerTreeFromXML(xml);
     const tree = factory.createTree("Main");
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(counters).toEqual([1, 3]);
   });
 });

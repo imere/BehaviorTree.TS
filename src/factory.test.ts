@@ -48,7 +48,7 @@ describe("BehaviorTreeFactory", () => {
 });
 
 describe("BehaviorTreeReload", () => {
-  test("ReloadSameTree", () => {
+  test("ReloadSameTree", async () => {
     const xmlA = `
     <root BTTS_format="4">
       <Tree id="MainTree">
@@ -69,14 +69,14 @@ describe("BehaviorTreeReload", () => {
     {
       const tree = factory.createTree("MainTree");
 
-      expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+      expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     }
 
     factory.registerTreeFromXML(xmlB);
     {
       const tree = factory.createTree("MainTree");
 
-      expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.FAILURE);
+      expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE);
     }
   });
 });

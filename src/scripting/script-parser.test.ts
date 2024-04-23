@@ -108,7 +108,7 @@ describe("ParserTest", () => {
     expect(GetResult("C")).toBe(Color.BLUE);
   });
 
-  test("EnumsXML", () => {
+  test("EnumsXML", async () => {
     const factory = new TreeFactory();
 
     const xml = `
@@ -130,7 +130,7 @@ describe("ParserTest", () => {
 
     const tree = factory.createTreeFromXML(xml);
 
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     const blackboard = tree.subtrees[0].blackboard;
     expect(blackboard.get("A")).toBe(42);
@@ -154,7 +154,7 @@ describe("ParserTest", () => {
     return NodeStatus.SUCCESS;
   }
 
-  test("Enums_BehaviorTree.CPPIssue_523", () => {
+  test("Enums_BehaviorTree.CPPIssue_523", async () => {
     const factory = new TreeFactory();
 
     const xml = `
@@ -187,7 +187,7 @@ describe("ParserTest", () => {
     factory.registerScriptingEnums(DeviceType);
 
     const tree = factory.createTreeFromXML(xml);
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     const blackboard = tree.subtrees[0].blackboard;
     expect(blackboard.get("deviceA")).toBe(DeviceType.BATT);
@@ -206,7 +206,7 @@ describe("ParserTest", () => {
     }
   }
 
-  test("BehaviorTree.CPPIssue595", () => {
+  test("BehaviorTree.CPPIssue595", async () => {
     const factory = new TreeFactory();
 
     const xml = `
@@ -225,11 +225,11 @@ describe("ParserTest", () => {
     factory.registerNodeType(SampleNode595, SampleNode595.name);
 
     const tree = factory.createTreeFromXML(xml);
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(counters).toEqual([0]);
   });
 
-  test("NewLine", () => {
+  test("NewLine", async () => {
     const factory = new TreeFactory();
 
     const xml = `
@@ -241,7 +241,7 @@ describe("ParserTest", () => {
     `;
 
     const tree = factory.createTreeFromXML(xml);
-    expect(tree.tickWhileRunning()).resolves.toBe(NodeStatus.SUCCESS);
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     expect(tree.rootBlackboard!.get("A")).toBe(5);
     expect(tree.rootBlackboard!.get("B")).toBe(6);
