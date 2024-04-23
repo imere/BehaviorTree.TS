@@ -94,9 +94,9 @@ describe("SkippingLogic", () => {
 
     const factory = new TreeFactory();
     const rootBlackboard = Blackboard.create();
-    rootBlackboard.set("flag", 1);
+    rootBlackboard.set("flag", true);
 
-    const tree = factory.createTreeFromXML(xml);
+    const tree = factory.createTreeFromXML(xml, rootBlackboard);
 
     expect(tree.tickWhileRunning()).resolves.toBeDefined();
   });
