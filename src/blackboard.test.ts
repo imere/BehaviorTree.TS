@@ -12,6 +12,7 @@ import {
   type NodeUserStatus,
 } from "./basic";
 import { SaySomething } from "./sample/DummyNodes";
+import { now } from "./utils/date-time";
 
 @ImplementPorts
 class BB_TestNode extends SyncActionNode {
@@ -266,6 +267,43 @@ describe("BlackboardTest", () => {
 
     status = await tree.tickWhileRunning();
     expect(status).toBe(NodeStatus.SUCCESS);
+  });
+
+  test("TimestampedInterface", () => {
+    const bb = Blackboard.create();
+
+    // still empty, expected to fail
+    expect(bb.getStamped("value")).not.toBeDefined();
+
+    let nsec_before = now();
+    bb.set("value", 42);
+    let result = bb.getStamped("value");
+    let value = result?.value;
+    let stamp_opt = result?.stamp;
+
+    expect(result?.value).toBe(42);
+    expect(result?.stamp.seq).toBe(1);
+    expect(result?.stamp.time).toBe(nsec_before);
+
+    expect(value).toBe(42);
+    expect(stamp_opt).toBeDefined();
+    expect(stamp_opt?.seq).toBe(1);
+    expect(stamp_opt?.time).toBe(nsec_before);
+
+    nsec_before = now();
+    bb.set("value", 69);
+    result = bb.getStamped("value");
+    value = result?.value;
+    stamp_opt = result?.stamp;
+
+    expect(result?.value).toBe(69);
+    expect(result?.stamp.seq).toBe(2);
+    expect(result?.stamp.time).toBe(nsec_before);
+
+    expect(value).toBe(69);
+    expect(stamp_opt).toBeDefined();
+    expect(stamp_opt?.seq).toBe(2);
+    expect(stamp_opt?.time).toBe(nsec_before);
   });
 });
 

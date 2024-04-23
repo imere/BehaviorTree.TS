@@ -1,17 +1,27 @@
-import { PortDirection, PortInfo } from "./basic";
+import { PortDirection, PortInfo, Timestamp } from "./basic";
+import { now } from "./utils/date-time";
 
 export function isPrivateKey(key: PropertyKey): key is `_${string}` {
   return Boolean(key) && String(key).startsWith("_");
 }
 
 export class Entry {
+  public value?: any;
+
+  sequence_id = 0;
+  stamp = now();
+
+  constructor(public info: PortInfo) {}
+}
+
+export class StampedValue<T = unknown> {
   constructor(
-    public portInfo: PortInfo,
-    public value?: any
+    public value: T,
+    public stamp: Timestamp = new Timestamp()
   ) {}
 }
 
-export class Blackboard implements Map<PropertyKey, Entry> {
+export class Blackboard {
   static create(parent?: Blackboard): Blackboard {
     return new Blackboard(parent);
   }
@@ -59,21 +69,6 @@ export class Blackboard implements Map<PropertyKey, Entry> {
 
   [Symbol.toStringTag]: string = "Blackboard";
 
-  set(key: PropertyKey, value: unknown): this {
-    if (!this._storage.has(key)) {
-      const entry = this.createEntry(key, new PortInfo(PortDirection.INOUT));
-      entry.value = value;
-    } else {
-      this._storage.get(key)!.value = value;
-    }
-
-    return this;
-  }
-
-  get<R = any>(key: PropertyKey): R | undefined {
-    return this.getEntry(key)?.value;
-  }
-
   keys(): IterableIterator<PropertyKey> {
     return this._storage.keys();
   }
@@ -82,12 +77,34 @@ export class Blackboard implements Map<PropertyKey, Entry> {
     this._storage.clear();
   }
 
+  set(key: PropertyKey, value: unknown): void {
+    if (!this._storage.has(key)) {
+      const entry = this.createEntry(key, new PortInfo(PortDirection.INOUT));
+      entry.value = value;
+      entry.sequence_id++;
+      entry.stamp = now();
+    } else {
+      const entry = this._storage.get(key)!;
+      entry.value = value;
+      entry.sequence_id++;
+      entry.stamp = now();
+    }
+  }
+
+  get<R = any>(key: PropertyKey): R | undefined {
+    return this.getEntry(key)?.value;
+  }
+
+  unset(key: PropertyKey): void {
+    this._storage.delete(key);
+  }
+
   enableAutoRemapping(remapping: boolean): void {
     this.autoRemapping = remapping;
   }
 
   portInfo(key: PropertyKey): PortInfo | undefined {
-    if (this._storage.has(key)) return this._storage.get(key)!.portInfo;
+    if (this._storage.has(key)) return this._storage.get(key)!.info;
   }
 
   addSubtreeRemapping(internal: string, external: string): void {
@@ -95,12 +112,34 @@ export class Blackboard implements Map<PropertyKey, Entry> {
   }
 
   cloneInto(dst: Blackboard): void {
-    dst.clear();
+    // keys that are not updated must be removed.
+    const keys_to_remove = new Set<PropertyKey>();
+    const dst_storage = dst._storage;
+    for (const key of dst_storage.keys()) {
+      keys_to_remove.add(key);
+    }
 
-    for (const [key, entry] of this._storage) {
-      const newEntry = new Entry(entry.portInfo);
-      newEntry.value = entry.value;
-      dst._storage.set(key, newEntry);
+    // update or create entries in dst_storage
+    for (const [src_key, src_entry] of this._storage) {
+      keys_to_remove.delete(src_key);
+
+      if (dst_storage.has(src_key)) {
+        const dst_entry = dst_storage.get(src_key)!;
+        // dst_entry.string_converter = src_entry.string_converter;
+        dst_entry.value = src_entry.value;
+        dst_entry.info = src_entry.info;
+        dst_entry.sequence_id++;
+        dst_entry.stamp = now();
+      } else {
+        const new_entry = new Entry(src_entry.info);
+        new_entry.value = src_entry.value;
+        // new_entry.string_converter = src_entry.string_converter;
+        dst_storage.set(src_key, new_entry);
+      }
+    }
+
+    for (const key of keys_to_remove) {
+      dst_storage.delete(key);
     }
   }
 
@@ -146,6 +185,13 @@ export class Blackboard implements Map<PropertyKey, Entry> {
         if (entry) this._storage.set(key, entry);
         return entry;
       }
+    }
+  }
+
+  getStamped<T = any>(key: PropertyKey): StampedValue<T> | undefined {
+    const entry = this.getEntry(key);
+    if (entry) {
+      return new StampedValue<T>(entry!.value, new Timestamp(entry.stamp, entry.sequence_id));
     }
   }
 }

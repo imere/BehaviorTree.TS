@@ -37,7 +37,7 @@ export class SetBlackboardNode extends SyncActionNode {
       if (!srcEntry) throw new Error("Can't find the port referred by [value]");
 
       if (!dstEntry) {
-        this.config.blackboard.createEntry(outputKey, srcEntry.portInfo);
+        this.config.blackboard.createEntry(outputKey, srcEntry.info);
         dstEntry = this.config.blackboard.getEntry(outputKey);
       }
 

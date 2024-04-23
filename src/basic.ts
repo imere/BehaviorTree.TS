@@ -5,6 +5,7 @@ import {
   type AbstractConstructorType,
   type ConstructorType,
 } from "./utils";
+import { now } from "./utils/date-time";
 
 export enum NodeType {
   Undefined,
@@ -76,6 +77,13 @@ export class PortInfo {
 /** type checking */
 export function ImplementPorts<T extends Required<CtorWithPorts>>(Ctor: T) {
   return Ctor;
+}
+
+export class Timestamp {
+  constructor(
+    public time = now(),
+    public seq = 0
+  ) {}
 }
 
 const forbidPortNamePatterns: Array<string | RegExp> = ["", "id", "name", /^[^a-z]/i];

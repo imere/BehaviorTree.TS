@@ -35,8 +35,10 @@ import { ForceSuccessNode } from "./decorators/ForceSuccessNode";
 import { InverterNode } from "./decorators/InverterNode";
 import { RunOnceNode } from "./decorators/RunOnceNode";
 import { PreconditionNode } from "./decorators/ScriptPreconditionNode";
+import { SkipUnlessUpdated } from "./decorators/SkipUnlessUpdated";
 import { SubtreeNode } from "./decorators/SubtreeNode";
 import { TimeoutNode } from "./decorators/TimeoutNode";
+import { WaitValueUpdate } from "./decorators/WaitUpdate";
 import {
   Environment,
   createRuntimeExecutor,
@@ -127,6 +129,9 @@ export class TreeFactory {
     this.registerNodeType(createSwitchNode(4), "Switch4");
     this.registerNodeType(createSwitchNode(5), "Switch5");
     this.registerNodeType(createSwitchNode(6), "Switch6");
+
+    this.registerNodeType(SkipUnlessUpdated, "SkipUnlessUpdated");
+    this.registerNodeType(WaitValueUpdate, "WaitValueUpdate");
 
     this.builders.forEach((_, id) => {
       this.builtinIds.add(id);
