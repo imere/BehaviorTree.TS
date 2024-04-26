@@ -1,37 +1,55 @@
 import { StatefulActionNode } from "../ActionNode";
-import { NodeConfig } from "../TreeNode";
+import type { NodeConfig } from "../TreeNode";
 import { NodeStatus, PortList, type NodeUserStatus } from "../basic";
-import { createRuntimeExecutor } from "../scripting/parser";
+import { createRuntimeExecutor, type Environment, type ScriptFunction } from "../scripting/parser";
 
 export interface ITestNodeConfig {
-  returnStatus: "SUCCESS" | "FAILURE" | "RUNNING";
-  postScript?: string;
-  asyncDelay?: number;
+  return_status: Exclude<keyof typeof NodeStatus, "IDLE">;
+  /**
+   * script to execute when complete_func() returns SUCCESS
+   */
+  success_script?: string;
+
+  /**
+   * script to execute when complete_func() returns FAILURE
+   */
+  failure_script?: string;
+
+  /**
+   * script to execute when actions is completed
+   */
+  post_script?: string;
+
+  /**
+   * if async_delay > 0, this action become asynchronous and wait this amount of time
+   */
+  async_delay: number;
+
+  /**
+   * Function invoked when the action is completed. By default just return [return_status]
+   * Override it to intorduce more comple cases
+   */
+  complete_func: () => NodeUserStatus;
 }
 
 export class TestNodeConfig implements ITestNodeConfig {
-  /** status to return when the action is completed */
-  returnStatus = "RUNNING" as ITestNodeConfig["returnStatus"];
+  return_status = "SUCCESS" as const;
 
-  /** script to execute when actions is completed */
-  postScript?: string;
+  success_script?: string;
 
-  /** if async_delay > 0, this action become asynchronous and wait this amount of time */
-  asyncDelay = 0;
+  failure_script?: string;
 
-  /** callback to execute at the beginning */
-  preFunc?: () => void;
+  post_script?: string;
 
-  /** callback to execute at the end */
-  postFunc?: () => void;
+  async_delay = 0;
+
+  complete_func = () => NodeStatus[this.return_status] as NodeUserStatus;
 }
 
 export class TestNode extends StatefulActionNode {
-  private timer: any;
-
-  private completed = false;
-
-  private executor?: () => void;
+  static providedPorts(): PortList {
+    return new PortList();
+  }
 
   constructor(
     name: string,
@@ -40,27 +58,41 @@ export class TestNode extends StatefulActionNode {
   ) {
     super(name, config);
     this.registrationId = "TestNode";
-  }
 
-  static providedPorts(): PortList {
-    return new PortList();
-  }
-
-  setConfig(config: TestNodeConfig): void {
-    this.testConfig = config;
-    if (config.postScript) {
-      this.executor = createRuntimeExecutor(
-        [this.config.blackboard, this.config.enums],
-        config.postScript
-      );
+    // @ts-expect-error This comparison appears to be unintentional because the types 'string' and 'NodeStatus' have no overlap
+    if (testConfig.return_status === NodeStatus.IDLE) {
+      throw new Error("TestNode can not return IDLE");
     }
+
+    const parseScript = (script: string | undefined): ScriptFunction | undefined => {
+      if (!script) return;
+      let execute: () => unknown;
+      return (env) => {
+        if (!execute) execute = createRuntimeExecutor(env, script);
+        return execute();
+      };
+    };
+
+    this.successExecutor = parseScript(testConfig.success_script);
+    this.successExecutor = parseScript(testConfig.failure_script);
+    this.successExecutor = parseScript(testConfig.post_script);
   }
+
+  private timer: any;
+
+  private completed = false;
+
+  private successExecutor?: ScriptFunction;
+
+  private failureExecutor?: ScriptFunction;
+
+  private postExecutor?: ScriptFunction;
 
   override onStart(): NodeUserStatus {
-    if (this.testConfig.preFunc) this.testConfig.preFunc();
+    if (this.testConfig.async_delay <= 0) return this.onCompleted();
 
-    if (this.testConfig.asyncDelay <= 0) return this.onCompleted();
-
+    // convert this in an asynchronous operation. Use another thread to count
+    // a certain amount of time.
     this.completed = false;
 
     this.timer = setTimeout(() => {
@@ -70,7 +102,7 @@ export class TestNode extends StatefulActionNode {
         this.completed = true;
         this.emitWakeUpSignal();
       }
-    }, this.testConfig.asyncDelay);
+    }, this.testConfig.async_delay);
 
     return NodeStatus.RUNNING;
   }
@@ -86,12 +118,17 @@ export class TestNode extends StatefulActionNode {
   }
 
   private onCompleted(): NodeUserStatus {
-    if (this.executor) {
-      this.executor();
+    const env: Environment = [this.config.blackboard, this.config.enums];
+
+    const status = this.testConfig.complete_func();
+    if (status === NodeStatus.SUCCESS && this.successExecutor) {
+      this.successExecutor(env);
+    } else if (status === NodeStatus.FAILURE && this.failureExecutor) {
+      this.failureExecutor(env);
     }
 
-    this.testConfig.postFunc?.();
+    this.postExecutor?.(env);
 
-    return NodeStatus[this.testConfig.returnStatus];
+    return status as NodeUserStatus;
   }
 }

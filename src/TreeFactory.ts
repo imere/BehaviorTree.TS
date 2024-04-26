@@ -287,8 +287,7 @@ export class TreeFactory {
           break;
         } else if (rule instanceof TestNodeConfig) {
           // second case, the varian is a TestNodeConfig
-          const testNode = new TestNode(name, config);
-          testNode.setConfig(rule);
+          const testNode = new TestNode(name, config, rule);
           // node.reset(testNode);
           node = testNode;
           substituted = true;
@@ -411,11 +410,21 @@ export class TreeFactory {
       if (!configs.has(name)) configs.set(name, new TestNodeConfig());
 
       const config = configs.get(name)!;
-      config.returnStatus = testConfig.returnStatus;
-      if (testConfig.asyncDelay !== undefined) {
-        config.asyncDelay = testConfig.asyncDelay;
+      if (testConfig.return_status !== undefined) {
+        config.return_status = testConfig.return_status;
       }
-      config.postScript = testConfig.postScript;
+      if (testConfig.async_delay !== undefined) {
+        config.async_delay = testConfig.async_delay;
+      }
+      if (testConfig.post_script !== undefined) {
+        config.post_script = testConfig.post_script;
+      }
+      if (testConfig.success_script !== undefined) {
+        config.success_script = testConfig.success_script;
+      }
+      if (testConfig.failure_script !== undefined) {
+        config.failure_script = testConfig.failure_script;
+      }
     }
 
     for (const [nodeName, testName] of Object.entries(SubstitutionRules)) {
@@ -522,9 +531,7 @@ export class Tree {
   }
 
   applyVisitor(visitor: Parameters<typeof applyRecursiveVisitor>[1]): void {
-    for (const subtree of this.subtrees) {
-      applyRecursiveVisitor(subtree.nodes[0], visitor);
-    }
+    applyRecursiveVisitor(this.rootNode, visitor);
   }
 
   getUID(): number {

@@ -6,12 +6,12 @@ const json = `
 {
   "TestNodeConfigs": {
     "TestA": {
-      "asyncDelay": 2000,
-      "returnStatus": "SUCCESS",
-      "postScript": "msg ='message SUBSTITUED'"
+      "async_delay": 2000,
+      "return_status": "SUCCESS",
+      "post_script": "msg ='message SUBSTITUED'"
     },
     "TestB": {
-      "returnStatus": "FAILURE"
+      "return_status": "FAILURE"
     }
   },
 
@@ -37,14 +37,14 @@ describe("Substitution", () => {
     expect(rules.has("actionC")).toBeTruthy();
 
     const configA = rules.get("actionA") as TestNodeConfig;
-    expect(configA.returnStatus).toEqual(NodeStatus[NodeStatus.SUCCESS]);
-    expect(configA.asyncDelay).toEqual(2000);
-    expect(configA.postScript).toEqual("msg ='message SUBSTITUED'");
+    expect(configA.return_status).toEqual(NodeStatus[NodeStatus.SUCCESS]);
+    expect(configA.async_delay).toEqual(2000);
+    expect(configA.post_script).toEqual("msg ='message SUBSTITUED'");
 
     const configB = rules.get("actionB") as TestNodeConfig;
-    expect(configB.returnStatus).toEqual(NodeStatus[NodeStatus.FAILURE]);
-    expect(configB.asyncDelay).toEqual(0);
-    expect(configB.postScript).toBeFalsy();
+    expect(configB.return_status).toEqual(NodeStatus[NodeStatus.FAILURE]);
+    expect(configB.async_delay).toEqual(0);
+    expect(configB.post_script).toBeFalsy();
 
     expect(rules.get("actionC")).toEqual("NotAConfig");
   });
