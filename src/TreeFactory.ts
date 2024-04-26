@@ -40,10 +40,10 @@ import { SubtreeNode } from "./decorators/SubtreeNode";
 import { TimeoutNode } from "./decorators/TimeoutNode";
 import { WaitValueUpdate } from "./decorators/WaitUpdate";
 import {
-  Environment,
   createRuntimeExecutor,
   supportScriptExpression,
   type EnumsTable,
+  type Environment,
   type ScriptFunction,
 } from "./scripting/parser";
 import type { ConstructorType } from "./utils";
@@ -358,7 +358,7 @@ export class TreeFactory {
 
   addMetadataToManifest(nodeId: string, metadata: Metadata) {
     if (!this.manifests.has(nodeId)) {
-      throw new Error("addMetadataToManifest: wrong ID");
+      throw new Error(`addMetadataToManifest: wrong ID [${nodeId}]`);
     }
     this.manifests.get(nodeId)!.metadata = metadata;
   }
