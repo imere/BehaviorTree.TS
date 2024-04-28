@@ -6,11 +6,19 @@ A (mostly) copy & paste repo of [BehaviorTree.CPP](https://github.com/BehaviorTr
 
 ## Usage
 
+
 ```sh
 git clone https://github.com/imere/BehaviorTree.TS.git
 ```
 
-and import from `src` directly in `.ts` file
+#### Method A
+
+import from `src`
+
+#### Method B
+
+1. run `yarn build`
+2. import from `dist`
 
 ## Some differences (including but not limited to)
 
