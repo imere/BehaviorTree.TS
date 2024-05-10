@@ -1,26 +1,26 @@
+import {
+  convertNodeNameToNodeType,
+  isAllowedPortName,
+  NodeType,
+  PortDirection,
+  type PortList,
+} from "./basic";
 import { Blackboard } from "./Blackboard";
 import { ControlNode } from "./ControlNode";
 import { DecoratorNode } from "./DecoratorNode";
+import { SubtreeNode } from "./decorators/SubtreeNode";
+import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports";
+import { type EnumsTable } from "./scripting/parser";
 import { Subtree, Tree, type TreeFactory } from "./TreeFactory";
 import {
+  convertToString as convertConditionToString,
   NodeConfig,
   PortsRemapping,
   PostCondition,
   PreCondition,
   TreeNode,
   TreeNodeManifest,
-  convertToString as convertConditionToString,
 } from "./TreeNode";
-import {
-  NodeType,
-  PortDirection,
-  convertNodeNameToNodeType,
-  isAllowedPortName,
-  type PortList,
-} from "./basic";
-import { SubtreeNode } from "./decorators/SubtreeNode";
-import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports";
-import { type EnumsTable } from "./scripting/parser";
 import { getEnumKeys } from "./utils";
 
 export const convertFromString = (scriptingEnums: EnumsTable, value: string | undefined) => {
@@ -35,20 +35,70 @@ export const convertFromString = (scriptingEnums: EnumsTable, value: string | un
 
 export interface TreeObject {
   name: string;
-  // eslint-disable-next-line @typescript-eslint/ban-types
   props?: Partial<Record<"BTTS_format" | (string & {}), string>>;
   children: TreeNodeObject[];
 }
 
 export interface TreeNodeObject {
   name: string;
-  // eslint-disable-next-line @typescript-eslint/ban-types
   props?: Partial<Record<"id" | "name" | (string & {}), string>>;
   children?: TreeNodeObject[];
 }
 
 interface SubtreeModel {
   ports: PortList;
+}
+
+export function parseXML(xml: string): TreeObject {
+  xml = xml.trim();
+
+  const ret: TreeObject = { name: "root", children: [] };
+  const doc = parseDocument(xml, { xmlMode: true }) as unknown as Element;
+
+  for (const element of withoutSpecialTextChildren(doc)) {
+    if (element.type === ElementType.Text && !element.data?.trim()) continue;
+    setNode(ret, element);
+  }
+
+  return ret;
+
+  function setNode(parent: TreeNodeObject, element: Element): void {
+    if (element.type === ElementType.Text) {
+      return;
+    }
+
+    parent.name = element.name;
+    parent.props = element.attribs;
+
+    let children = withoutSpecialTextChildren(element);
+    const shouldStripText = children.some((child) => child.type === ElementType.Tag);
+    const shouldStitchText =
+      !shouldStripText && children.every((child) => child.type === ElementType.Text);
+
+    if (shouldStripText) {
+      children = children.filter((child) => child.type !== ElementType.Text);
+    }
+
+    if (shouldStitchText) {
+      return;
+    }
+
+    for (const elem of children) {
+      const node: TreeNodeObject = {
+        name: "",
+        props: {},
+        children: [],
+      };
+      parent.children?.push(node);
+      setNode(node, elem);
+    }
+  }
+
+  function withoutSpecialTextChildren(element: Element): Element[] {
+    return (element.children || []).filter((child) => {
+      return ![ElementType.CDATA, ElementType.Comment].includes(child.type);
+    });
+  }
 }
 
 export class Parser {
@@ -70,55 +120,7 @@ export class Parser {
   }
 
   loadFromXML(xml: string): void {
-    xml = xml.trim();
-
-    const json: TreeObject = { name: "root", children: [] };
-    const doc = parseDocument(xml, { xmlMode: true }) as unknown as Element;
-
-    for (const element of withoutSpecialTextChildren(doc)) {
-      if (element.type === ElementType.Text && !element.data?.trim()) continue;
-      setNode(json, element);
-    }
-
-    this.loadFromObject(json);
-
-    function setNode(parent: TreeNodeObject, element: Element): void {
-      if (element.type === ElementType.Text) {
-        return;
-      }
-
-      parent.name = element.name;
-      parent.props = element.attribs;
-
-      let children = withoutSpecialTextChildren(element);
-      const shouldStripText = children.some((child) => child.type === ElementType.Tag);
-      const shouldStitchText =
-        !shouldStripText && children.every((child) => child.type === ElementType.Text);
-
-      if (shouldStripText) {
-        children = children.filter((child) => child.type !== ElementType.Text);
-      }
-
-      if (shouldStitchText) {
-        return;
-      }
-
-      for (const elem of children) {
-        const node: TreeNodeObject = {
-          name: "",
-          props: {},
-          children: [],
-        };
-        parent.children?.push(node);
-        setNode(node, elem);
-      }
-    }
-
-    function withoutSpecialTextChildren(element: Element): Element[] {
-      return (element.children || []).filter((child) => {
-        return ![ElementType.CDATA, ElementType.Comment].includes(child.type);
-      });
-    }
+    this.loadFromObject(parseXML(xml));
   }
 
   loadSubtreeModel(_json: TreeObject): void {
