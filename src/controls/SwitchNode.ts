@@ -1,5 +1,6 @@
 import { ControlNode } from "../ControlNode";
-import type { Converter, NodeConfig } from "../TreeNode";
+import { convertFromString } from "../Parser";
+import type { NodeConfig } from "../TreeNode";
 import {
   NodeStatus,
   PortList,
@@ -8,10 +9,6 @@ import {
   type NodeUserStatus,
 } from "../basic";
 import type { ConstructorType } from "../utils";
-
-const getPortValue: Converter<any> = (value: any, { hints: { remap } }) => {
-  return remap ? value : JSON.parse(value);
-};
 
 declare class ISwitchNode extends ControlNode {
   static providedPorts(): PortList;
@@ -43,13 +40,17 @@ export function createSwitchNode(
         );
       }
 
-      const variable = this.getInput("variable", getPortValue);
+      const variable = this.getInput("variable", (value) =>
+        convertFromString(this.config.enums, value)
+      );
       let matchIndex = NUM_CASES;
 
       if (variable !== undefined) {
         // check each case until you find a match
         for (let i = 0; i < NUM_CASES; i++) {
-          const value = this.getInput(`case_${i + 1}`, getPortValue);
+          const value = this.getInput(`case_${i + 1}`, (value) =>
+            convertFromString(this.config.enums, value)
+          );
           if (value !== undefined && variable === value) {
             matchIndex = i;
             break;
