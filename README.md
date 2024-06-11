@@ -4,14 +4,17 @@
 
 A (mostly) copy & paste repo of [BehaviorTree.CPP](https://github.com/BehaviorTree/BehaviorTree.CPP)
 
-## Usage
+## Documentation
 
+Refer to [BehaviorTree.CPP docs](https://www.behaviortree.dev/docs/Intro)
+
+## Usage
 
 ```sh
 git clone https://github.com/imere/BehaviorTree.TS.git
 ```
 
-#### Method A
+#### Method A for TypeScript
 
 import from `src`
 
@@ -20,9 +23,15 @@ import from `src`
 1. run `yarn build`
 2. import from `dist`
 
-## Some differences (including but not limited to)
+## Some differences
 
 ```diff
+- <root BTCPP_format=
++ <root BTTS_format=
+
+- <BehaviorTree
++ <Tree
+
 - <SubTree
 + <Subtree
 
