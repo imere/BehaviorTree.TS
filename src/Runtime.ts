@@ -34,7 +34,6 @@ export function attachGlobals(target: object, extra?: [name: string, value: unkn
 }
 
 export class Runtime {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {}
 
   static create(parent?: object | null, handler?: ProxyHandler<object>) {
