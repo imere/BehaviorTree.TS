@@ -15,6 +15,7 @@ import type { ConstructorType } from "./utils";
 import { getEnumKeys } from "./utils";
 import { Emitter } from "./utils/Emitter";
 import { WakeUpSignal } from "./utils/WakeUpSignal";
+import { now } from "./utils/date-time";
 
 /** This information is used mostly by the Parser. */
 export class TreeNodeManifest {
@@ -107,7 +108,15 @@ export class NodeConfig {
 
 export type PortsRemapping = Map<string, string>;
 
-export type ConditionCallback = <T extends TreeNode>(node: T) => NodeUserStatus;
+export type PreTickCallback = <T extends TreeNode>(node: T) => NodeUserStatus;
+
+export type PostTickCallback = <T extends TreeNode>(node: T, status: NodeStatus) => NodeUserStatus;
+
+export type TickMonitorCallback = <T extends TreeNode>(
+  node: T,
+  status: NodeStatus,
+  durationMs: number
+) => void;
 
 export type Converter<R> = (portValue: any, param: { hints: { remap: boolean } }) => R;
 
@@ -144,9 +153,11 @@ export class TreeNode extends Emitter<{
 
   registrationId?: string;
 
-  private substitutionCallback?: ConditionCallback;
+  private preTick?: PreTickCallback;
 
-  private postConditionCallback?: ConditionCallback;
+  private postTick?: PostTickCallback;
+
+  private monitorTick?: TickMonitorCallback;
 
   private wakeUp: WakeUpSignal | undefined;
 
@@ -279,36 +290,39 @@ export class TreeNode extends Emitter<{
   executeTick(): NodeStatus {
     let newStatus = this.status as NodeUserStatus;
 
-    const pre = this.checkPreConditions();
+    const preCond = this.checkPreConditions();
 
-    if (pre !== undefined) {
-      newStatus = pre;
+    if (preCond !== undefined) {
+      newStatus = preCond;
     } else {
+      // injected pre-callback
       let substituted = false;
-      if (!isStatusCompleted(this.status)) {
-        const callback = this.substitutionCallback;
-        if (callback) {
-          const overrides = callback(this);
-          if (isStatusCompleted(overrides)) {
-            substituted = true;
-            newStatus = overrides;
-          }
+      if (this.preTick && !isStatusCompleted(this.status)) {
+        const overrideStatus = this.preTick(this);
+        if (isStatusCompleted(overrideStatus)) {
+          // don't execute the actual tick()
+          substituted = true;
+          newStatus = overrideStatus;
         }
       }
 
-      if (!substituted) newStatus = this.tick();
+      // Call the ACTUAL tick
+      if (!substituted) {
+        const t1 = now();
+        newStatus = this.tick();
+        const t2 = now();
+        if (this.monitorTick) this.monitorTick(this, newStatus, t2 - t1);
+      }
     }
 
     // injected post callback
     if (isStatusCompleted(newStatus)) {
       this.checkPostConditions(newStatus);
-      const callback = this.postConditionCallback;
-      if (callback) {
-        const overrides = callback(this);
-        if (isStatusCompleted(overrides)) {
-          newStatus = overrides;
-        }
-      }
+    }
+
+    if (this.postTick) {
+      const overrideStatus = this.postTick(this, newStatus);
+      if (isStatusCompleted(overrideStatus)) newStatus = overrideStatus;
     }
 
     if (newStatus !== NodeStatus.SKIPPED) this.setStatus(newStatus);
@@ -403,12 +417,41 @@ export class TreeNode extends Emitter<{
     return this.status === NodeStatus.IDLE;
   }
 
-  setPreTickFunction(fn: ConditionCallback): void {
-    this.substitutionCallback = fn;
+  /** This method attaches to the TreeNode a callback with signature:
+   *
+   *     NodeStatus callback(TreeNode& node)
+   *
+   * This callback is executed BEFORE the tick() and, if it returns SUCCESS or FAILURE,
+   * the actual tick() will NOT be executed and this result will be returned instead.
+   *
+   * This is useful to inject a "dummy" implementation of the TreeNode at run-time
+   */
+  setPreTickFunction(callback: PreTickCallback): void {
+    this.preTick = callback;
   }
 
-  setPostTickFunction(fn: ConditionCallback): void {
-    this.postConditionCallback = fn;
+  /**
+   * This method attaches to the TreeNode a callback with signature:
+   *
+   *     NodeStatus myCallback(TreeNode& node, NodeStatus status)
+   *
+   * This callback is executed AFTER the tick() and, if it returns SUCCESS or FAILURE,
+   * the value returned by the actual tick() is overriden with this one.
+   */
+  setPostTickFunction(callback: PostTickCallback): void {
+    this.postTick = callback;
+  }
+
+  /**
+   * This method attaches to the TreeNode a callback with signature:
+   *
+   *     void myCallback(TreeNode& node, NodeStatus status, std::chrono::microseconds duration)
+   *
+   * This callback is executed AFTER the tick() and will inform the user about its status and
+   * the execution time. Works only if the tick was not substituted by a pre-condition.
+   */
+  setTickMonitorCallback(callback: TickMonitorCallback): void {
+    this.monitorTick = callback;
   }
 
   /** Override this from {@link TreeNode} */

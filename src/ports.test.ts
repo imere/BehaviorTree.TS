@@ -92,11 +92,11 @@ describe("PortTest", () => {
       <Tree id="MainTree" _description="this is my tree" >
           <Sequence>
               <NodeWithPorts name="first"  in_port_B="66" _description="this is my action" />
-              <Subtree id="SubTree" name="second" _description="this is a subtree"/>
+              <Subtree id="mySubTree" name="second" _description="this is a subtree"/>
           </Sequence>
       </Tree>
 
-      <Tree id="SubTree" _description="this is a subtree" >
+      <Tree id="mySubTree" _description="this is a subtree" >
           <NodeWithPorts name="third" in_port_B="99" />
       </Tree>
     </root>

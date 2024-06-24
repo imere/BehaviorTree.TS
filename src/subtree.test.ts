@@ -450,4 +450,29 @@ describe("Subtree", () => {
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE);
     expect(lines).toEqual(["hello"]);
   });
+
+  test("SubtreeNameNotRegistered", async () => {
+    const xml = `
+    <root BTTS_format="4">
+      <BehaviorTree ID="PrintToConsole">\n
+        <Sequence>
+          <PrintToConsole message="world"/>
+        </Sequence>
+      </BehaviorTree>
+      <BehaviorTree ID="MainTree">
+        <Sequence>
+          <PrintToConsole message="hello"/>
+          <SubTree ID="PrintToConsole"/>
+        </Sequence>
+      </BehaviorTree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+    const lines: unknown[] = [];
+    factory.registerNodeType(PrintToConsole, PrintToConsole.name, lines.push.bind(lines));
+
+    expect(() => factory.createTreeFromXML(xml)).toThrow();
+    expect(() => factory.registerTreeFromXML(xml)).toThrow();
+  });
 });

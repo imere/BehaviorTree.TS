@@ -206,6 +206,11 @@ export class Parser {
 
     //-------------------------------------------------
 
+    let behavior_tree_count = 0;
+    for (const btRoot of root.children.filter((o) => o.name === "Tree")) {
+      behavior_tree_count++;
+    }
+
     // function to be called recursively
     const recursiveStep = (node: TreeNodeObject) => {
       const { name } = node;
@@ -221,8 +226,21 @@ export class Parser {
         expect(node, Infinity);
       } else if (name === "Subtree") {
         expect(node, 0, ["id"]);
+        if (registeredNodes.has(node.props?.id as string)) {
+          throw new Error(
+            "The attribute [id] of tag <SubTree> must not use the name of a registered Node"
+          );
+        }
       } else if (name === "Tree") {
         expect(node, 1);
+        if (!node.props?.id && behavior_tree_count > 1) {
+          throw new Error("The tag <Tree> must have the attribute [id]");
+        }
+        if (registeredNodes.has(node.props?.id as string)) {
+          throw new Error(
+            "The attribute [id] of tag <Tree> must not use the name of a registered Node"
+          );
+        }
       } else {
         const search = registeredNodes.get(name);
         if (search === undefined) {
@@ -231,13 +249,14 @@ export class Parser {
 
         if (search === NodeType.Decorator) {
           expect(node, 1);
+        } else if (search === NodeType.Control) {
+          expect(node, Infinity);
         }
       }
 
-      if (name !== "Subtree") {
-        for (const child of node.children || []) {
-          recursiveStep(child);
-        }
+      //recursion
+      for (const child of node.children || []) {
+        recursiveStep(child);
       }
     };
 
@@ -250,18 +269,18 @@ export class Parser {
       const count = node.children?.length || 0;
       if (childrenCount === Infinity) {
         if (!count) {
-          throw new Error(`The node <${name}> must  have at least 1 child`);
+          throw new Error(`The tag <${name}> must  have at least 1 child`);
         }
       } else if (count !== childrenCount) {
         throw new Error(
-          `The node <${name}> must ${
+          `The tag <${name}> must ${
             childrenCount ? `have exactly ${childrenCount}` : "not have any"
           } child`
         );
       }
       propNames?.forEach((prop) => {
         if (!node.props?.[prop]) {
-          throw new Error(`The node <${name}> must have the attribute [${prop}]`);
+          throw new Error(`The tag <${name}> must have the attribute [${prop}]`);
         }
       });
     }

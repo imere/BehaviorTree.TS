@@ -1,5 +1,5 @@
 import { TreeFactory } from "../TreeFactory";
-import { ConditionCallback } from "../TreeNode";
+import { type PreTickCallback } from "../TreeNode";
 import { AlwaysFailureNode } from "../actions/AlwaysFailureNode";
 import { NodeStatus, isStatusCompleted } from "../basic";
 import { registerTestTick } from "../testing/helper";
@@ -62,7 +62,7 @@ describe("Reactive", () => {
     const factory = new TreeFactory();
     const tree = factory.createTreeFromXML(xml);
 
-    const callback: ConditionCallback = () => NodeStatus.SUCCESS;
+    const callback: PreTickCallback = () => NodeStatus.SUCCESS;
 
     tree.applyVisitor((node) => {
       if (node instanceof AlwaysFailureNode) {
