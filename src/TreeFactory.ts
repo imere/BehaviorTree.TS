@@ -36,7 +36,7 @@ import { InverterNode } from "./decorators/InverterNode";
 import { RunOnceNode } from "./decorators/RunOnceNode";
 import { PreconditionNode } from "./decorators/ScriptPreconditionNode";
 import { SkipUnlessUpdated } from "./decorators/SkipUnlessUpdated";
-import { SubtreeNode } from "./decorators/SubtreeNode";
+import { SubTreeNode } from "./decorators/SubtreeNode";
 import { TimeoutNode } from "./decorators/TimeoutNode";
 import { WaitValueUpdate } from "./decorators/WaitUpdate";
 import {
@@ -120,7 +120,7 @@ export class TreeFactory {
     this.registerNodeType(SleepNode, "Sleep");
     this.registerNodeType(UnsetBlackboardNode, "UnsetBlackboard");
 
-    this.registerNodeType(SubtreeNode, "Subtree");
+    this.registerNodeType(SubTreeNode, "SubTree");
 
     this.registerNodeType(PreconditionNode, "Precondition");
 

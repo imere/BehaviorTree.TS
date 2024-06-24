@@ -12,13 +12,13 @@ describe("SkippingLogic", () => {
 
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = "A=1"/>
                 <TestA _successIf="A===2" _failureIf="A!==1" _skipIf="A===1"/>
                 <TestB/>
             </Sequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -34,13 +34,13 @@ describe("SkippingLogic", () => {
 
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <TestA _skipIf="A===1"/>
                 <TestB _skipIf="A<2"/>
                 <TestC _skipIf="A>0"/>
             </Sequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -58,17 +58,17 @@ describe("SkippingLogic", () => {
 
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="main">
+        <BehaviorTree ID="main">
             <Sequence>
                 <TestA/>
                 <Script code = "data=true"/>
-                <Subtree id="sub" _skipIf="data"/>
+                <SubTree ID="sub" _skipIf="data"/>
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="sub">
+        <BehaviorTree ID="sub">
             <TestB/>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -84,11 +84,11 @@ describe("SkippingLogic", () => {
   test("ReactiveSingleChild", async () => {
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="Untitled">
+        <BehaviorTree ID="Untitled">
           <ReactiveSequence>
             <AlwaysSuccess _skipIf="flag"/>
           </ReactiveSequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -108,25 +108,25 @@ describe("SkippingLogic", () => {
 
     const xml_noskip = `
     <root BTTS_format="4" >
-        <Tree>
+        <BehaviorTree>
           <ReactiveSequence>
             <Script code=" value=50 "/>
             <TestA _skipIf="value < 25"/>
             <AsyncActionTest/>
           </ReactiveSequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
     const xml_skip = `
     <root BTTS_format="4" >
-        <Tree>
+        <BehaviorTree>
           <ReactiveSequence>
             <Script code=" value=10 "/>
               <TestB _skipIf="value < 25"/>
             <AsyncActionTest/>
           </ReactiveSequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -161,27 +161,27 @@ describe("SkippingLogic", () => {
 
     const xml_noskip = `
     <root BTTS_format="4" >
-        <Tree>
+        <BehaviorTree>
           <Sequence>
             <Script code=" doit=true "/>
             <Sequence>
               <TestA _while="doit"/>
             </Sequence>
           </Sequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
     const xml_skip = `
     <root BTTS_format="4" >
-        <Tree>
+        <BehaviorTree>
           <Sequence>
             <Script code=" doit=false "/>
             <Sequence>
               <TestB _while="doit"/>
             </Sequence>
           </Sequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 

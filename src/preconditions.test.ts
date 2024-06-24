@@ -11,7 +11,7 @@ describe("PreconditionsDecorator", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
               <Script code = "A=1; B=1; C=3" />
               <Precondition if="A===B" else="FAILURE">
@@ -24,7 +24,7 @@ describe("PreconditionsDecorator", () => {
                   <TestC/>
               </Precondition>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -42,7 +42,7 @@ describe("PreconditionsDecorator", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
               <Script code = "A=1.1; B=1.0+0.1; C=2.0" />
 
@@ -58,7 +58,7 @@ describe("PreconditionsDecorator", () => {
                   <TestC/>
               </Precondition>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -76,7 +76,7 @@ describe("PreconditionsDecorator", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
               <Script code = "A=1.1; B=1.0+0.1; C=2.0" />
 
@@ -92,7 +92,7 @@ describe("PreconditionsDecorator", () => {
                   <TestC/>
               </Precondition>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -110,7 +110,7 @@ describe("PreconditionsDecorator", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
               <Script code = "A='hello'" />
               <Script code = "B='world'" />
@@ -124,7 +124,7 @@ describe("PreconditionsDecorator", () => {
                   <TestB/>
               </Precondition>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -144,7 +144,7 @@ describe("Preconditions", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
               <Script code = "A=1" />
               <TestA _successIf= "A===1"/>
@@ -154,7 +154,7 @@ describe("Preconditions", () => {
                   <TestD _failureIf= "A!==1"/>
               </Fallback>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -172,13 +172,13 @@ describe("Preconditions", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
             <TestA _skipIf="A!==1" />
             <TestB _skipIf="A!==2" _onSuccess="A=1"/>
             <TestC _skipIf="A!==3" _onSuccess="A=2"/>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -212,9 +212,9 @@ describe("Preconditions", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <KeepRunning _skipIf="check===false"/>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -248,28 +248,28 @@ describe("Preconditions", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="Main">
+      <BehaviorTree ID="Main">
         <Sequence>
           <SimpleOutput  output="{param}" />
           <Script  code="value=true" />
-          <Subtree id="Sub1" param="{param}"/>
-          <Subtree id="Sub1" param="{value}"/>
-          <Subtree id="Sub1" param="true"/>
+          <SubTree ID="Sub1" param="{param}"/>
+          <SubTree ID="Sub1" param="{value}"/>
+          <SubTree ID="Sub1" param="true"/>
           <TestA/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
 
-      <Tree id="Sub1">
+      <BehaviorTree ID="Sub1">
         <Sequence>
-          <Subtree id="Sub2" _skipIf="param !== true" />
+          <SubTree ID="Sub2" _skipIf="param !== true" />
         </Sequence>
-      </Tree>
+      </BehaviorTree>
         
-      <Tree id="Sub2">
+      <BehaviorTree ID="Sub2">
         <Sequence>
           <TestB/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 

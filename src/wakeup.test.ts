@@ -12,9 +12,9 @@ describe("WakeUp", () => {
   test("BasicTest", async () => {
     const xml = `
 <root BTTS_format="4">
-  <Tree id="MainTree">
+  <BehaviorTree ID="MainTree">
       <FastAction/>
-  </Tree>
+  </BehaviorTree>
 </root>
 `;
 

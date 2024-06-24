@@ -8,7 +8,7 @@ describe("Reactive", () => {
   test("RunningChildren", async () => {
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <ReactiveSequence>
             <Sequence name="first">
               <TestA/>
@@ -21,7 +21,7 @@ describe("Reactive", () => {
               <TestF/>
             </AsyncSequence>
           </ReactiveSequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 
@@ -49,13 +49,13 @@ describe("Reactive", () => {
   test("PreTickHooks", async () => {
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <ReactiveSequence>
             <AlwaysFailure name="failureA"/>
             <AlwaysFailure name="failureB"/>
             <Sleep ms="100"/>
           </ReactiveSequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 

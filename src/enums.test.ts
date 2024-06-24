@@ -36,14 +36,14 @@ describe("Enums", () => {
   test("StrintToEnum", async () => {
     const xml = `
 <root BTTS_format="4" >
-  <Tree id="Main">
+  <BehaviorTree ID="Main">
     <Sequence>
       <SetBlackboard value="Red" outputKey="my_color" />
       <ActionEnum name="maybe_blue" color="Blue"/>
       <ActionEnum name="maybe_green" color="2"/>
       <ActionEnum name="maybe_red" color="{my_color}"/>
     </Sequence>
-  </Tree>
+  </BehaviorTree>
 </root>
   `;
 
@@ -68,7 +68,7 @@ describe("Enums", () => {
   test("SwitchNodeWithEnum", async () => {
     const xml = `
 <root BTTS_format="4" >
-  <Tree id="Main">
+  <BehaviorTree ID="Main">
     <Sequence>
       <Script code=" my_color = Blue "/>
       <Switch4 variable="{my_color}"
@@ -83,7 +83,7 @@ describe("Enums", () => {
         <AlwaysFailure name="default_case" />
       </Switch4>
     </Sequence>
-  </Tree>
+  </BehaviorTree>
 </root>
   `;
 
@@ -129,25 +129,25 @@ describe("Enums", () => {
   test("SubtreeRemapping", async () => {
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <Sequence>
           <Script code=" fault_status = NO_FAULT " />
           <PrintEnum enum="{fault_status}"/>
-          <Subtree id="FailsafeCheck"
+          <SubTree ID="FailsafeCheck"
             health="false"
             trigger_fault_status="LOW_BATTERY"
             fault_status="{=}" />
           <PrintEnum enum="{fault_status}"/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
 
-      <Tree id="FailsafeCheck">
+      <BehaviorTree ID="FailsafeCheck">
         <ForceSuccess>
           <IsHealthOk
               health="{health}"
               _onFailure="fault_status = trigger_fault_status"/>
         </ForceSuccess>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 

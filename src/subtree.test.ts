@@ -78,18 +78,18 @@ describe("Subtree", () => {
   test("SiblingPorts_BehaviorTree.CPPIssue_72", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute="MainTree">
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " myParam='hello' " />
-                <Subtree id="mySubtree" param="{myParam}" />
+                <SubTree ID="mySubtree" param="{myParam}" />
                 <Script code = " myParam='world' " />
-                <Subtree id="mySubtree" param="{myParam}" />
+                <SubTree ID="mySubtree" param="{myParam}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="mySubtree">
+        <BehaviorTree ID="mySubtree">
                 <SaySomething message="{param}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -105,17 +105,17 @@ describe("Subtree", () => {
   test("GoodRemapping", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute="MainTree">
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " thoughts='hello' " />
-                <Subtree id="CopySubtree" in_arg="{thoughts}" out_arg="{greetings}" />
+                <SubTree ID="CopySubtree" in_arg="{thoughts}" out_arg="{greetings}" />
                 <SaySomething message="{greetings}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="CopySubtree">
+        <BehaviorTree ID="CopySubtree">
                 <CopyPorts in="{in_arg}" out="{out_arg}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -135,17 +135,17 @@ describe("Subtree", () => {
 
     const xml_text_bad_in = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " thoughts='hello' " />
-                <Subtree id="CopySubtree" out_arg="{greetings}" />
+                <SubTree ID="CopySubtree" out_arg="{greetings}" />
                 <SaySomething message="{greetings}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="CopySubtree">
+        <BehaviorTree ID="CopySubtree">
                 <CopyPorts in="{in_arg}" out="{out_arg}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -155,17 +155,17 @@ describe("Subtree", () => {
 
     const xml_text_bad_out = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " thoughts='hello' " />
-                <Subtree id="CopySubtree" in_arg="{thoughts}" />
+                <SubTree ID="CopySubtree" in_arg="{thoughts}" />
                 <SaySomething message="{greetings}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="CopySubtree">
+        <BehaviorTree ID="CopySubtree">
                 <CopyPorts in="{in_arg}" out="{out_arg}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -181,17 +181,17 @@ describe("Subtree", () => {
 
     const xml_text_bad_in = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " thoughts='hello' " />
-                <Subtree id="CopySubtree" out_arg="{greetings}" />
+                <SubTree ID="CopySubtree" out_arg="{greetings}" />
                 <SaySomething message="{greetings}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="CopySubtree">
+        <BehaviorTree ID="CopySubtree">
                 <CopyPorts in="{in_arg}" out="{out_arg}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -201,17 +201,17 @@ describe("Subtree", () => {
 
     const xml_text_bad_out = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " thoughts='hello' " />
-                <Subtree id="CopySubtree" in_arg="{thoughts}" />
+                <SubTree ID="CopySubtree" in_arg="{thoughts}" />
                 <SaySomething message="{greetings}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="CopySubtree">
+        <BehaviorTree ID="CopySubtree">
                 <CopyPorts in="{in_arg}" out="{out_arg}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -223,19 +223,19 @@ describe("Subtree", () => {
   test("SubtreePlusA", async () => {
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " myParam='hello' " />
-                <Subtree id="mySubtree" param="{myParam}" />
-                <Subtree id="mySubtree" param="World" />
+                <SubTree ID="mySubtree" param="{myParam}" />
+                <SubTree ID="mySubtree" param="World" />
                 <Script code = " param='Auto remapped' " />
-                <Subtree id="mySubtree" _autoremap="true" />
+                <SubTree ID="mySubtree" _autoremap="true" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="mySubtree">
+        <BehaviorTree ID="mySubtree">
           <SaySomething message="{param}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -251,20 +251,20 @@ describe("Subtree", () => {
   test("SubtreePlusB", async () => {
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code = " myParam='Hello World';param3='Auto remapped' " />
-                <Subtree id="mySubtree" _autoremap="true"  param1="{myParam}" param2="Straight Talking" />
+                <SubTree ID="mySubtree" _autoremap="true"  param1="{myParam}" param2="Straight Talking" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="mySubtree">
+        <BehaviorTree ID="mySubtree">
           <Sequence>
             <SaySomething message="{param1}" />
             <SaySomething message="{param2}" />
             <SaySomething message="{param3}" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -283,15 +283,15 @@ describe("Subtree", () => {
 
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
-                <Subtree id="mySubtree" _autoremap="true" />
+                <SubTree ID="mySubtree" _autoremap="true" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="mySubtree">
+        <BehaviorTree ID="mySubtree">
           <ReadInConstructor message="{message}" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -308,16 +308,16 @@ describe("Subtree", () => {
   test("ScriptRemap", async () => {
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Sequence>
                 <Script code="value=0" />
-                <Subtree id="mySubtree" value="{value}" />
+                <SubTree ID="mySubtree" value="{value}" />
             </Sequence>
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="mySubtree">
+        <BehaviorTree ID="mySubtree">
           <Script code="value=1" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -333,20 +333,20 @@ describe("Subtree", () => {
   test("SubtreeBehaviorTree.CPPIssue592", async () => {
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="Outer_Tree">
+        <BehaviorTree ID="Outer_Tree">
           <Sequence>
             <Script code="variable='test'" />
             <Script code="va='test'" />
-            <Subtree id="Inner_Tree" _autoremap="false" variable="{va}" />
-            <Subtree id="Inner_Tree" _autoremap="true" />
+            <SubTree ID="Inner_Tree" _autoremap="false" variable="{va}" />
+            <SubTree ID="Inner_Tree" _autoremap="true" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
             
-        <Tree id="Inner_Tree">
+        <BehaviorTree ID="Inner_Tree">
           <Sequence>
             <TestA _skipIf="variable !== 'test'"/>
           </Sequence>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -364,16 +364,16 @@ describe("Subtree", () => {
   test("BehaviorTree.CPPIssue653_SetBlackboard", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <Sequence>
-            <Subtree id="Init" test="{test}" />
+            <SubTree ID="Init" test="{test}" />
             <Assert condition="{test}" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
             
-        <Tree id="Init">
+        <BehaviorTree ID="Init">
           <SetBlackboard outputKey="test" value="true"/>
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -387,25 +387,25 @@ describe("Subtree", () => {
   test("RemappingBehaviorTree.CPPIssue696", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
-      <Tree id="Subtree1">
+      <BehaviorTree ID="Subtree1">
         <Sequence>
           <PrintToConsole message="{msg1}"/>
           <PrintToConsole message="{msg2}"/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
 
-      <Tree id="Subtree2">
+      <BehaviorTree ID="Subtree2">
         <Sequence>
-          <Subtree id="Subtree1" msg1="foo1" _autoremap="true"/>
-          <Subtree id="Subtree1" msg1="foo2" _autoremap="true"/>
+          <SubTree ID="Subtree1" msg1="foo1" _autoremap="true"/>
+          <SubTree ID="Subtree1" msg1="foo2" _autoremap="true"/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
 
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <Sequence>
-          <Subtree id="Subtree2" msg2="bar" />
+          <SubTree ID="Subtree2" msg2="bar" />
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -423,20 +423,20 @@ describe("Subtree", () => {
   test("PrivateAutoRemapping", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
-      <Tree id="Subtree">
+      <BehaviorTree ID="Subtree">
         <Sequence>
           <SetBlackboard outputKey="public_value" value='"hello"'/>
           <SetBlackboard outputKey="_private_value" value='"world"'/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
 
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <Sequence>
-          <Subtree id="Subtree" _autoremap="true" />
+          <SubTree ID="Subtree" _autoremap="true" />
           <PrintToConsole message="{public_value}"/>
           <PrintToConsole message="{_private_value}"/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 

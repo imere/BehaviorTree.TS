@@ -113,9 +113,9 @@ describe("ParserTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
             <Script code = "A=THE_ANSWER; color1=RED; color2=BLUE; color3=GREEN" />
-        </Tree>
+        </BehaviorTree>
     </root>
     `;
 
@@ -159,7 +159,7 @@ describe("ParserTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="PowerManagerT">
+      <BehaviorTree ID="PowerManagerT">
         <ReactiveSequence>
           <Script code=" deviceA=BATT; deviceB=CONTROLLER; battery_level=30 "/>
           <CheckLevel deviceType="{deviceA}" percentage="{battery_level}" isLowBattery="{isLowBattery}"/>
@@ -169,7 +169,7 @@ describe("ParserTest", () => {
           <CheckLevel deviceType="{deviceA}" percentage="{battery_level}" isLowBattery="{isLowBattery}"/>
           <SaySomething message="SECOND low batteries!" _skipIf="!isLowBattery" />
         </ReactiveSequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -211,12 +211,12 @@ describe("ParserTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-      <Tree ID="PowerManagerT">
+      <BehaviorTree ID="PowerManagerT">
         <Sequence>
           <SampleNode595 find_enemy="{find_enemy}" />
           <TestA _skipIf="find_enemy==0"/>
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -234,9 +234,9 @@ describe("ParserTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-      <Tree ID="Main">
+      <BehaviorTree ID="Main">
         <Script code="A=5;&#10;B=6"/>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 

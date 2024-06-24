@@ -7,7 +7,7 @@ describe("PostConditions", () => {
 
     const xml = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
           <Sequence>
               <Script code = "A=1; B=1; C=1; D=1" />
 
@@ -21,7 +21,7 @@ describe("PostConditions", () => {
                   <AlwaysFailure _onFailure="D=42"/>
               </ForceSuccess>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 

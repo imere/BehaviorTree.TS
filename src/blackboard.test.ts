@@ -109,12 +109,12 @@ describe("BlackboardTest", () => {
   test("SetOutputFromText", async () => {
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <Sequence>
             <BB_TestNode in_port="11" out_port="{my_port}"/>
             <SetBlackboard value="-43" outputKey="my_port" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 
@@ -133,7 +133,7 @@ describe("BlackboardTest", () => {
 
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <Sequence>
             <BB_TestNode in_port="11"
                               out_port="{my_input_port}"/>
@@ -144,7 +144,7 @@ describe("BlackboardTest", () => {
             <BB_TestNode in_port="{my_input_port}"
                           out_port="{my_output_port}" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 
@@ -164,11 +164,11 @@ describe("BlackboardTest", () => {
 
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <Sequence>
             <BB_TestNode inpuuuut_port="{value}" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 
@@ -180,16 +180,16 @@ describe("BlackboardTest", () => {
 
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MySubtree">
+        <BehaviorTree ID="MySubtree">
           <ComparisonNode first="{value}" second="42" operator="==" />
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <Sequence>
             <SetBlackboard value="42" outputKey="value" />
-            <Subtree id="MySubtree" value="{value}  "/>
+            <SubTree ID="MySubtree" value="{value}  "/>
           </Sequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 
@@ -221,19 +221,19 @@ describe("BlackboardTest", () => {
 
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MySubtree">
+        <BehaviorTree ID="MySubtree">
           <Sequence>
             <Script code=" important_value= sub_value " />
             <Script code=" my_value=false " />
             <SaySomething message="{message}" />
           </Sequence>
-        </Tree>
-        <Tree id="MainTree">
+        </BehaviorTree>
+        <BehaviorTree ID="MainTree">
           <Sequence>
             <Script code=" my_value=true; another_value='hi' " />
-            <Subtree id="MySubtree" sub_value="true" message="{another_value}" _autoremap="true" />
+            <SubTree ID="MySubtree" sub_value="true" message="{another_value}" _autoremap="true" />
           </Sequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 
@@ -313,16 +313,16 @@ describe("ParserTest", () => {
 
     const xml = `
       <root BTTS_format="4" >
-        <Tree id="MySubtree">
+        <BehaviorTree ID="MySubtree">
           <SetBlackboard value="false" outputKey="sub_value" />
-        </Tree>
+        </BehaviorTree>
 
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <Sequence>
             <SetBlackboard value="true" outputKey="my_value" />
-            <Subtree id="MySubtree" sub_value="{my_value}  "/>
+            <SubTree ID="MySubtree" sub_value="{my_value}  "/>
           </Sequence>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
 

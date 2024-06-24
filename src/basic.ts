@@ -13,7 +13,7 @@ export enum NodeType {
   Condition,
   Control,
   Decorator,
-  Subtree,
+  SubTree,
 }
 
 export enum NodeStatus {
@@ -86,7 +86,7 @@ export class Timestamp {
   ) {}
 }
 
-const forbidPortNamePatterns: Array<string | RegExp> = ["", "id", "name", /^[^a-z]/i];
+const forbidPortNamePatterns: Array<string | RegExp> = ["", "ID", "name", /^[^a-z]/i];
 
 export function isAllowedPortName(name: string): boolean {
   return !matchPattern(forbidPortNamePatterns, name);
@@ -188,8 +188,8 @@ export function convertNodeNameToNodeType(name: string): NodeType {
       return NodeType.Control;
     case "Decorator":
       return NodeType.Decorator;
-    case "Subtree":
-      return NodeType.Subtree;
+    case "SubTree":
+      return NodeType.SubTree;
     default:
       return NodeType.Undefined;
   }

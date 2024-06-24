@@ -14,8 +14,8 @@ describe("BehaviorTreeFactory", () => {
   test("BehaviorTree.CPPIssue7", () => {
     const xml = `
       <root BTTS_format="4">
-        <Tree id="ReceiveGuest">
-        </Tree>
+        <BehaviorTree ID="ReceiveGuest">
+        </BehaviorTree>
       </root>
     `;
     const factory = new TreeFactory();
@@ -26,9 +26,9 @@ describe("BehaviorTreeFactory", () => {
   test("WrongTreeName", () => {
     const xml = `
       <root BTTS_format="4">
-        <Tree id="MainTree">
+        <BehaviorTree ID="MainTree">
           <AlwaysSuccess/>
-        </Tree>
+        </BehaviorTree>
       </root>
     `;
     const factory = new TreeFactory();
@@ -51,16 +51,16 @@ describe("BehaviorTreeReload", () => {
   test("ReloadSameTree", async () => {
     const xmlA = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <AlwaysSuccess/>
-      </Tree>
+      </BehaviorTree>
     </root>
   `;
     const xmlB = `
     <root BTTS_format="4">
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <AlwaysFailure/>
-      </Tree>
+      </BehaviorTree>
     </root>
   `;
     const factory = new TreeFactory();

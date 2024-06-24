@@ -4,7 +4,7 @@ import { ControlNode } from "./ControlNode";
 import { DecoratorNode } from "./DecoratorNode";
 import { TreeNode } from "./TreeNode";
 import { NodeType } from "./basic";
-import { SubtreeNode } from "./decorators/SubtreeNode";
+import { SubTreeNode } from "./decorators/SubtreeNode";
 import { type AbstractConstructorType, type ConstructorType } from "./utils";
 
 export function applyRecursiveVisitor(
@@ -74,7 +74,7 @@ export function getType<T extends TreeNode>(
 ): NodeType {
   if (isDerivedFrom(Ctor, ActionNodeBase)) return NodeType.Action;
   if (isDerivedFrom(Ctor, ConditionNode)) return NodeType.Condition;
-  if (isDerivedFrom(Ctor, SubtreeNode)) return NodeType.Subtree;
+  if (isDerivedFrom(Ctor, SubTreeNode)) return NodeType.SubTree;
   if (isDerivedFrom(Ctor, DecoratorNode)) return NodeType.Decorator;
   if (isDerivedFrom(Ctor, ControlNode)) return NodeType.Control;
   return NodeType.Undefined;

@@ -5,7 +5,7 @@
     <xs:complexType>
       <xs:sequence>
         <xs:choice maxOccurs="unbounded">
-          <xs:element ref="Tree" />
+          <xs:element ref="BehaviorTree" />
         </xs:choice>
       </xs:sequence>
 
@@ -140,10 +140,10 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="Subtree">
+  <xs:element name="SubTree">
     <xs:complexType>
       <xs:attributeGroup ref="AG_PrePost" />
-      <xs:attribute name="id" type="xs:IDREF" use="required" />
+      <xs:attribute name="ID" type="xs:IDREF" use="required" />
       <xs:attribute name="_autoremap" type="xs:boolean" />
       <xs:anyAttribute processContents="lax" />
     </xs:complexType>
@@ -230,12 +230,12 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="Tree">
+  <xs:element name="BehaviorTree">
     <xs:complexType>
       <xs:choice>
         <xs:any />
       </xs:choice>
-      <xs:attribute name="id" type="xs:ID" use="required" />
+      <xs:attribute name="ID" type="xs:ID" use="required" />
     </xs:complexType>
   </xs:element>
 

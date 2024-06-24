@@ -48,12 +48,12 @@ import {
  *    Setting to true (or 1) the attribute "_autoremap", we are automatically remapping
  *    each port. Useful to avoid boilerplate.
  */
-export class SubtreeNode extends DecoratorNode {
-  override type: NodeType = NodeType.Subtree;
+export class SubTreeNode extends DecoratorNode {
+  override type: NodeType = NodeType.SubTree;
 
   constructor(name: string, config: NodeConfig) {
     super(name, config);
-    this.registrationId = "Subtree";
+    this.registrationId = "SubTree";
   }
 
   static providedPorts(): PortList {

@@ -8,7 +8,7 @@ import {
 import { Blackboard } from "./Blackboard";
 import { ControlNode } from "./ControlNode";
 import { DecoratorNode } from "./DecoratorNode";
-import { SubtreeNode } from "./decorators/SubtreeNode";
+import { SubTreeNode } from "./decorators/SubtreeNode";
 import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports";
 import { type EnumsTable } from "./scripting/parser";
 import { Subtree, Tree, type TreeFactory } from "./TreeFactory";
@@ -41,7 +41,7 @@ export interface TreeObject {
 
 export interface TreeNodeObject {
   name: string;
-  props?: Partial<Record<"id" | "name" | (string & {}), string>>;
+  props?: Partial<Record<"ID" | "name" | (string & {}), string>>;
   children?: TreeNodeObject[];
 }
 
@@ -133,14 +133,14 @@ export class Parser {
     //   )
     // ) {
     //   for (
-    //     let subNodeIdx = modelsNode.children?.findIndex((child) => child.name === "Subtree"),
+    //     let subNodeIdx = modelsNode.children?.findIndex((child) => child.name === "SubTree"),
     //       subNode = modelsNode.children?.[subNodeIdx!];
     //     subNode;
     //     subNodeIdx = modelsNode.children?.findIndex(
-    //       (child, i) => subNodeIdx! < i && child.name === "Subtree"
+    //       (child, i) => subNodeIdx! < i && child.name === "SubTree"
     //     )
     //   ) {
-    //     const subtreeId = subNode.props?.id;
+    //     const subtreeId = subNode.props?.ID;
     //   }
     // }
   }
@@ -166,7 +166,7 @@ export class Parser {
     this.loadSubtreeModel(json);
 
     for (let i = 0, node: TreeNodeObject = json.children[i]; (node = json.children[i]); i++) {
-      const treeName = node.props?.id || `Tree_${this.suffixCount++}`;
+      const treeName = node.props?.ID || `Tree_${this.suffixCount++}`;
       this.treeRoots.set(treeName, node);
     }
   }
@@ -195,10 +195,10 @@ export class Parser {
       // Graphical editor needs it.
       for (const node of root.children) {
         const { name } = node;
-        if (["Action", "Decorator", "Subtree", "Condition", "Control"].includes(name)) {
-          const id = node.props?.id;
+        if (["Action", "Decorator", "SubTree", "Condition", "Control"].includes(name)) {
+          const id = node.props?.ID;
           if (!id) {
-            throw new Error(`${name}: The attribute  [id] is mandatory`);
+            throw new Error(`${name}: The attribute  [ID] is mandatory`);
           }
         }
       }
@@ -206,39 +206,36 @@ export class Parser {
 
     //-------------------------------------------------
 
-    let behavior_tree_count = 0;
-    for (const btRoot of root.children.filter((o) => o.name === "Tree")) {
-      behavior_tree_count++;
-    }
+    const behavior_tree_count = root.children.filter((o) => o.name === "BehaviorTree").length;
 
     // function to be called recursively
     const recursiveStep = (node: TreeNodeObject) => {
       const { name } = node;
       if (name === "Decorator") {
-        expect(node, 1, ["id"]);
+        expect(node, 1, ["ID"]);
       } else if (name === "Action") {
-        expect(node, 0, ["id"]);
+        expect(node, 0, ["ID"]);
       } else if (name === "Condition") {
-        expect(node, 0, ["id"]);
+        expect(node, 0, ["ID"]);
       } else if (name === "Control") {
-        expect(node, Infinity, ["id"]);
+        expect(node, Infinity, ["ID"]);
       } else if (["Sequence", "SequenceStar", "Fallback"].includes(name)) {
         expect(node, Infinity);
-      } else if (name === "Subtree") {
-        expect(node, 0, ["id"]);
-        if (registeredNodes.has(node.props?.id as string)) {
+      } else if (name === "SubTree") {
+        expect(node, 0, ["ID"]);
+        if (registeredNodes.has(node.props?.ID as string)) {
           throw new Error(
-            "The attribute [id] of tag <SubTree> must not use the name of a registered Node"
+            "The attribute [ID] of tag <SubTree> must not use the name of a registered Node"
           );
         }
-      } else if (name === "Tree") {
+      } else if (name === "BehaviorTree") {
         expect(node, 1);
-        if (!node.props?.id && behavior_tree_count > 1) {
-          throw new Error("The tag <Tree> must have the attribute [id]");
+        if (!node.props?.ID && behavior_tree_count > 1) {
+          throw new Error("The tag <BehaviorTree> must have the attribute [ID]");
         }
-        if (registeredNodes.has(node.props?.id as string)) {
+        if (registeredNodes.has(node.props?.ID as string)) {
           throw new Error(
-            "The attribute [id] of tag <Tree> must not use the name of a registered Node"
+            "The attribute [ID] of tag <BehaviorTree> must not use the name of a registered Node"
           );
         }
       } else {
@@ -260,7 +257,7 @@ export class Parser {
       }
     };
 
-    for (const btRoot of root.children.filter((o) => o.name === "Tree")) {
+    for (const btRoot of root.children.filter((o) => o.name === "BehaviorTree")) {
       recursiveStep(btRoot);
     }
 
@@ -344,13 +341,13 @@ export class Parser {
       subtree.nodes.push(node);
 
       // common case: iterate through all children
-      if (node.type !== NodeType.Subtree) {
+      if (node.type !== NodeType.SubTree) {
         for (const child of json.children || []) {
           recursiveStep(node, subtree, prefix, child);
         }
       } else {
         const newBB = Blackboard.create(blackboard);
-        const subtreeId = json.props?.id;
+        const subtreeId = json.props?.ID;
         const subtreeRemapping = new Map();
         let doAutoRemap = false;
 
@@ -383,7 +380,7 @@ export class Parser {
               if (typeof portInfo.defaultValue === "undefined") {
                 throw new Error(
                   [
-                    'In the <TreeNodesModel> the <Subtree id="',
+                    'In the <TreeNodesModel> the <SubTree ID="',
                     subtreeId,
                     '"> is defining a mandatory port called [',
                     portName,
@@ -452,7 +449,7 @@ export class Parser {
     prefixPath: string,
     tree: Tree
   ): TreeNode {
-    const [name, id] = [json.name, json.props?.id];
+    const [name, id] = [json.name, json.props?.ID];
     const nodeType = convertNodeNameToNodeType(name);
 
     // name used by the factory
@@ -530,10 +527,10 @@ export class Parser {
 
     let newNode: TreeNode = new TreeNode(instanceName, config);
 
-    if (nodeType === NodeType.Subtree) {
+    if (nodeType === NodeType.SubTree) {
       config.input = portRemap;
-      newNode = this.factory.instantiateTreeNode(instanceName, NodeType[NodeType.Subtree], config);
-      const subtreeNode = newNode as SubtreeNode;
+      newNode = this.factory.instantiateTreeNode(instanceName, NodeType[NodeType.SubTree], config);
+      const subtreeNode = newNode as SubTreeNode;
       subtreeNode.setSubtreeId(typeId);
     } else {
       if (!manifest) {

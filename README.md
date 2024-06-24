@@ -28,15 +28,6 @@ import from `src`
 ```diff
 - <root BTCPP_format=
 + <root BTTS_format=
-
-- <BehaviorTree
-+ <Tree
-
-- <SubTree
-+ <Subtree
-
-- <... ID=
-+ <... id=
 ```
 
 ## License

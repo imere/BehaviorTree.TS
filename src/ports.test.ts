@@ -34,11 +34,11 @@ describe("PortTest", () => {
   test("DefaultPorts", async () => {
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <Sequence>
           <NodeWithPorts in_port_B="66" />
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -53,11 +53,11 @@ describe("PortTest", () => {
   test("MissingPort", async () => {
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <Sequence>
           <NodeWithPorts />
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -72,11 +72,11 @@ describe("PortTest", () => {
   test("WrongPort", () => {
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="MainTree">
+      <BehaviorTree ID="MainTree">
         <Sequence>
           <NodeWithPorts da_port="66" />
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -89,16 +89,16 @@ describe("PortTest", () => {
   test("Descriptions", async () => {
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="MainTree" _description="this is my tree" >
+      <BehaviorTree ID="MainTree" _description="this is my tree" >
           <Sequence>
               <NodeWithPorts name="first"  in_port_B="66" _description="this is my action" />
-              <Subtree id="mySubTree" name="second" _description="this is a subtree"/>
+              <SubTree ID="mySubTree" name="second" _description="this is a subtree"/>
           </Sequence>
-      </Tree>
+      </BehaviorTree>
 
-      <Tree id="mySubTree" _description="this is a subtree" >
+      <BehaviorTree ID="mySubTree" _description="this is a subtree" >
           <NodeWithPorts name="third" in_port_B="99" />
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -142,12 +142,12 @@ describe("PortTest", () => {
   test("EmptyPort", async () => {
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="MainTree" _description="this is my tree" >
+      <BehaviorTree ID="MainTree" _description="this is my tree" >
         <Sequence>
             <NodeInPorts  int_port="{ip}" any_port="{ap}" />
             <NodeOutPorts int_port="{ip}" any_port="{ap}" />
         </Sequence>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -202,13 +202,13 @@ describe("PortTest", () => {
   test("SubtreeStringInput_BehaviorTree.CPPIssue489", async () => {
     const xml = `
     <root BTTS_format="4" >
-      <Tree id="Main">
-        <Subtree id="Subtree_A" states="3;7"/>
-      </Tree>
+      <BehaviorTree ID="Main">
+        <SubTree ID="Subtree_A" states="3;7"/>
+      </BehaviorTree>
 
-      <Tree id="Subtree_A">
+      <BehaviorTree ID="Subtree_A">
         <ActionVectorIn states="{states}"/>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -273,9 +273,9 @@ describe("PortTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-      <Tree>
+      <BehaviorTree>
         <DefaultTestAction/>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -335,9 +335,9 @@ describe("PortTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-      <Tree>
+      <BehaviorTree>
         <NodeWithDefaultPoints input="9,10"/>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 
@@ -390,9 +390,9 @@ describe("PortTest", () => {
 
     const xml = `
     <root BTTS_format="4" >
-      <Tree>
+      <BehaviorTree>
         <NodeWithDefaultStrings input="from XML"/>
-      </Tree>
+      </BehaviorTree>
     </root>
     `;
 

@@ -62,7 +62,7 @@ describe("ReactiveBackchaining", () => {
     //  postcondition true.
     const xml_text = `
   <root BTTS_format="4">
-    <Tree id="EnsureWarm">
+    <BehaviorTree ID="EnsureWarm">
       <ReactiveFallback>
         <IsWarm name="warm"/>
         <ReactiveSequence>
@@ -70,7 +70,7 @@ describe("ReactiveBackchaining", () => {
           <WearJacket name="wear" />
         </ReactiveSequence>
       </ReactiveFallback>
-    </Tree>
+    </BehaviorTree>
   </root>
   )`;
 
@@ -118,16 +118,16 @@ test("EnsureWarmWithEnsureHoldingHacket", async () => {
   // The general structure of the PPA remains the same.
   const xml_text = `
   <root BTTS_format="4">
-    <Tree id="EnsureWarm">
+    <BehaviorTree ID="EnsureWarm">
       <ReactiveFallback>
         <IsWarm />
         <ReactiveSequence>
-          <Subtree id="EnsureHoldingJacket" />
+          <SubTree ID="EnsureHoldingJacket" />
           <WearJacket />
         </ReactiveSequence>
       </ReactiveFallback>
-    </Tree>
-    <Tree id="EnsureHoldingJacket">
+    </BehaviorTree>
+    <BehaviorTree ID="EnsureHoldingJacket">
       <ReactiveFallback>
         <IsHoldingJacket />
         <ReactiveSequence>
@@ -135,7 +135,7 @@ test("EnsureWarmWithEnsureHoldingHacket", async () => {
           <GrabJacket />
         </ReactiveSequence>
       </ReactiveFallback>
-    </Tree>
+    </BehaviorTree>
   </root>
   `;
 
