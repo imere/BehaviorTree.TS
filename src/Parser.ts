@@ -507,20 +507,20 @@ export class Parser {
     }
 
     const addCondition = (
-      conditions: Map<PreCondition | PostCondition, string>,
+      conditions: Map<string | number, string>,
       attrName: string,
-      id: number
+      id: string | number
     ) => {
       const script = json.props?.[attrName];
       if (script) conditions.set(id, script);
     };
 
-    for (let i = 0, len = getEnumKeys(PreCondition).length; i < len; i++) {
-      addCondition(config.preConditions, convertConditionToString(PreCondition, i), i);
+    for (const key of getEnumKeys(PreCondition)) {
+      addCondition(config.preConditions, convertConditionToString(key), PreCondition[key]);
     }
 
-    for (let i = 0, len = getEnumKeys(PostCondition).length; i < len; i++) {
-      addCondition(config.postConditions, convertConditionToString(PostCondition, i), i);
+    for (const key of getEnumKeys(PostCondition)) {
+      addCondition(config.postConditions, convertConditionToString(key), PostCondition[key]);
     }
 
     //---------------------------------------------

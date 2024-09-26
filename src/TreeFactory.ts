@@ -4,7 +4,13 @@ import { SimpleConditionNode } from "./ConditionNode";
 import { SimpleDecoratorNode } from "./DecoratorNode";
 import { Parser, type TreeObject } from "./Parser";
 import { applyRecursiveVisitor, getType } from "./Tree";
-import { NodeConfig, TreeNode, TreeNodeManifest } from "./TreeNode";
+import {
+  NodeConfig,
+  TreeNode,
+  TreeNodeManifest,
+  type PostCondition,
+  type PreCondition,
+} from "./TreeNode";
 import { AlwaysFailureNode } from "./actions/AlwaysFailureNode";
 import { AlwaysSuccessNode } from "./actions/AlwaysSuccessNode";
 import { ScriptNode } from "./actions/ScriptNode";
@@ -307,7 +313,7 @@ export class TreeFactory {
     node.config.enums = this.scriptingEnums;
 
     const assignConditions = (
-      conditions: Map<number, string>,
+      conditions: Map<PreCondition | PostCondition, string>,
       executors: ScriptFunction[]
     ): void => {
       for (const [condition, script] of conditions) {

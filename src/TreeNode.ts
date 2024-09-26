@@ -42,19 +42,8 @@ export enum PostCondition {
 }
 
 /** 转换到字符串 */
-export function convertToString<T extends typeof PreCondition, K extends PreCondition>(
-  o: T,
-  key: K
-): string;
-export function convertToString<T extends typeof PostCondition, K extends PostCondition>(
-  o: T,
-  key: K
-): string;
-export function convertToString<
-  T extends typeof PreCondition | typeof PostCondition,
-  K extends PreCondition | PostCondition,
->(o: T, key: K): string {
-  switch (o[key]) {
+export function convertToString(key: string): string {
+  switch (key) {
     case "FAILURE_IF":
       return "_failureIf";
     case "SUCCESS_IF":
@@ -361,7 +350,9 @@ export class TreeNode extends Emitter<{
   checkPreConditions(): NodeUserStatus | undefined {
     const env: Environment = [this.config.blackboard, this.config.enums];
     // check the pre-conditions
-    for (let preId = 0, len = getEnumKeys(PreCondition).length; preId < len; preId++) {
+    for (const key of getEnumKeys(PreCondition)) {
+      const preId = PreCondition[key] as unknown as PreCondition;
+
       const executor = this.preParsed[preId];
       if (!executor) continue;
 
@@ -466,6 +457,14 @@ export class TreeNode extends Emitter<{
 
   haltNode(): void {
     this.halt();
+    const executeScript = (condition: PostCondition) => {
+      const executor = this.postParsed[condition];
+      if (executor) {
+        const env: Environment = [this.config.blackboard, this.config.enums];
+        executor(env);
+      }
+    };
+    executeScript(PostCondition.ON_HALTED);
   }
 
   setWakeUpInstance(instance: WakeUpSignal): void {
