@@ -195,21 +195,21 @@ describe("Preconditions", () => {
     expect(counters).toEqual([1, 1, 1]);
   });
 
-  test("BehaviorTree.CPPIssue615_NoSkipWhenRunning_B", async () => {
-    class KeepRunning extends StatefulActionNode {
-      override onStart(): NodeUserStatus {
-        return NodeStatus.RUNNING;
-      }
-
-      override onRunning(): NodeUserStatus {
-        return NodeStatus.RUNNING;
-      }
-
-      override onHalted(): void {
-        console.log("Node halted");
-      }
+  class KeepRunning extends StatefulActionNode {
+    override onStart(): NodeUserStatus {
+      return NodeStatus.RUNNING;
     }
 
+    override onRunning(): NodeUserStatus {
+      return NodeStatus.RUNNING;
+    }
+
+    override onHalted(): void {
+      console.log("Node halted");
+    }
+  }
+
+  test("BehaviorTree.CPPIssue615_NoSkipWhenRunning_B", async () => {
     const xml = `
     <root BTTS_format="4">
       <BehaviorTree ID="MainTree">
@@ -283,5 +283,31 @@ describe("Preconditions", () => {
 
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
     expect(counters).toEqual([1, 3]);
+  });
+
+  test("WhileCallsOnHalt", async () => {
+    const xml = `
+    <root BTTS_format="4">
+      <BehaviorTree ID="Main">
+        <Sequence>
+          <KeepRunning _while="A==1" _onHalted="B=69" />
+        </Sequence>
+      </BehaviorTree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.registerNodeType(KeepRunning, KeepRunning.name, new PortList());
+    factory.registerTreeFromXML(xml);
+    const tree = factory.createTree("Main");
+
+    tree.rootBlackboard!.set("A", 1);
+    tree.rootBlackboard!.set("B", 0);
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+    expect(tree.rootBlackboard?.get("B")).toBe(0);
+
+    tree.rootBlackboard!.set("A", 0);
+    expect(await tree.tickOnce()).toBe(NodeStatus.SKIPPED);
+    expect(tree.rootBlackboard!.get("B")).toBe(69);
   });
 });

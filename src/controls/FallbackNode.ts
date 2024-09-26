@@ -17,7 +17,7 @@ import { NodeStatus, type NodeUserStatus } from "../basic";
 export class FallbackNode extends ControlNode {
   private currentChildIdx = 0;
 
-  private allSkipped = true;
+  private skippedCount = 0;
 
   constructor(
     name: string,
@@ -29,7 +29,7 @@ export class FallbackNode extends ControlNode {
   }
 
   override tick(): NodeUserStatus {
-    if (this.status === NodeStatus.IDLE) this.allSkipped = true;
+    if (this.status === NodeStatus.IDLE) this.skippedCount = 0;
 
     this.setStatus(NodeStatus.RUNNING);
 
@@ -39,9 +39,6 @@ export class FallbackNode extends ControlNode {
       const oldStatus = currentChild.status;
 
       const status = currentChild.executeTick();
-
-      // switch to RUNNING state as soon as you find an active child
-      this.allSkipped = this.allSkipped && status === NodeStatus.SKIPPED;
 
       switch (status) {
         case NodeStatus.RUNNING: {
@@ -69,6 +66,7 @@ export class FallbackNode extends ControlNode {
         }
         case NodeStatus.SKIPPED: {
           this.currentChildIdx++;
+          this.skippedCount++;
           break;
         }
         case NodeStatus.IDLE: {
@@ -84,7 +82,7 @@ export class FallbackNode extends ControlNode {
     }
 
     // Skip if ALL the nodes have been skipped
-    return this.allSkipped ? NodeStatus.SKIPPED : NodeStatus.FAILURE;
+    return this.skippedCount === this.childrenCount() ? NodeStatus.SKIPPED : NodeStatus.FAILURE;
   }
 
   override halt(): void {
