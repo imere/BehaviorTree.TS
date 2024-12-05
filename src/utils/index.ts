@@ -8,10 +8,6 @@ export type Fn<R = any> = (...args: any) => R;
 
 export type MaybePromise<T> = T | Promise<T>;
 
-export interface Disposable {
-  dispose(): void;
-}
-
 export const noop = () => {
   // noop
 };
@@ -30,6 +26,6 @@ export function getEnumKeys(value: object): any[] {
   return Object.keys(value).filter((_) => isNaN(Number(_)));
 }
 
-export function createEmptyObject<O extends object = {}>(): O {
+export function createEmptyObject<O extends object>(): O {
   return Object.create(null);
 }

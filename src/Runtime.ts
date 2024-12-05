@@ -81,9 +81,9 @@ export class Runtime {
       )
       .join("\n");
     const withBlock = `${initializer} ${script}`;
-    let fn: Function;
+    let fn: (...args: unknown[]) => R;
     try {
-      fn = new Function(proxyName, `with(${proxyName}){${withBlock}}`);
+      fn = new Function(proxyName, `with(${proxyName}){${withBlock}}`) as typeof fn;
     } catch (cause) {
       throw new Error(`Runtime.createFunction():\n${withBlock}`, { cause });
     }
