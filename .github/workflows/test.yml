@@ -18,4 +18,5 @@ jobs:
           node-version: "20.x"
       - run: |
           yarn
+          yarn lint
           yarn test
