@@ -4,6 +4,7 @@ import type { Converter, NodeConfig } from "./TreeNode";
 import {
   ImplementPorts,
   NodeStatus,
+  NodeType,
   PortList,
   createInputPort,
   type NodeUserStatus,
@@ -109,6 +110,30 @@ describe("PortTest", () => {
     const tree = factory.createTree("MainTree");
 
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.FAILURE); // failure because in_port_B="99"
+  });
+
+  test("NonPorts", async () => {
+    const xml = `
+      <root BTTS_format="4" >
+        <BehaviorTree ID="MainTree">
+          <Action ID="NodeWithPorts" name="NodeWithPortsName" in_port_B="66" _not_da_port="whateva" _skipIf="true" />
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.registerNodeType(NodeWithPorts, NodeWithPorts.name);
+
+    const tree = factory.createTreeFromXML(xml);
+
+    const root = tree.rootNode!;
+
+    expect(root).toBeDefined();
+    expect(root.type).toBe(NodeType.Action);
+
+    expect(root.config.otherAttributes.size).toBe(1);
+    expect(root.config.otherAttributes.has("_not_da_port")).toBeTruthy();
+    expect(root.config.otherAttributes.get("_not_da_port")).toBe("whateva");
   });
 
   @ImplementPorts

@@ -34,6 +34,13 @@ export enum PreCondition {
   WHILE_TRUE,
 }
 
+export const PreCondPairs: [string, string][] = [
+  ["FAILURE_IF", "_failureIf"],
+  ["SUCCESS_IF", "_successIf"],
+  ["SKIP_IF", "_skipIf"],
+  ["WHILE_TRUE", "_while"],
+];
+
 export enum PostCondition {
   ON_HALTED,
   ON_FAILURE,
@@ -41,28 +48,21 @@ export enum PostCondition {
   ALWAYS,
 }
 
-/** 转换到字符串 */
+export const PostCondPairs: [string, string][] = [
+  ["ON_HALTED", "_onHalted"],
+  ["ON_FAILURE", "_onFailure"],
+  ["ON_SUCCESS", "_onSuccess"],
+  ["ALWAYS", "_post"],
+];
+
 export function convertToString(key: string): string {
-  switch (key) {
-    case "FAILURE_IF":
-      return "_failureIf";
-    case "SUCCESS_IF":
-      return "_successIf";
-    case "SKIP_IF":
-      return "_skipIf";
-    case "WHILE_TRUE":
-      return "_while";
-    case "ON_HALTED":
-      return "_onHalted";
-    case "ON_FAILURE":
-      return "_onFailure";
-    case "ON_SUCCESS":
-      return "_onSuccess";
-    case "ALWAYS":
-      return "_post";
-    default:
-      return "Undefined";
+  for (const pair of PreCondPairs) {
+    if (pair[0] === key) return pair[1];
   }
+  for (const pair of PostCondPairs) {
+    if (pair[0] === key) return pair[1];
+  }
+  return "Undefined";
 }
 
 export class NodeConfig {
@@ -70,9 +70,11 @@ export class NodeConfig {
 
   enums: EnumsTable = new Map();
 
-  input = new Map<string, string>();
+  input: PortsRemapping = new Map<string, string>();
 
-  output = new Map<string, string>();
+  output: PortsRemapping = new Map<string, string>();
+
+  otherAttributes: NonPortAttributes = new Map<string, string>();
 
   manifest?: TreeNodeManifest;
 
@@ -96,6 +98,8 @@ export class NodeConfig {
 }
 
 export type PortsRemapping = Map<string, string>;
+
+export type NonPortAttributes = Map<string, string>;
 
 export type PreTickCallback = <T extends TreeNode>(node: T) => NodeUserStatus;
 

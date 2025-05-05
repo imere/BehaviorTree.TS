@@ -1,6 +1,7 @@
 import {
   convertNodeNameToNodeType,
   isAllowedPortName,
+  isReservedAttribute,
   NodeType,
   PortDirection,
   type PortList,
@@ -20,6 +21,7 @@ import {
   PreCondition,
   TreeNode,
   TreeNodeManifest,
+  type NonPortAttributes,
 } from "./TreeNode";
 import { getEnumKeys } from "./utils";
 
@@ -500,6 +502,8 @@ export class Parser {
     const manifest: TreeNodeManifest | undefined = this.factory.manifests.get(typeId);
 
     const portRemap: PortsRemapping = new Map();
+    const otherAttributes: NonPortAttributes = new Map();
+
     for (const [portName, portValue] of Object.entries(
       (json.props || {}) as Record<string, string>
     )) {
@@ -513,6 +517,8 @@ export class Parser {
         }
 
         portRemap.set(portName, portValue);
+      } else if (!isReservedAttribute(portName)) {
+        otherAttributes.set(portName, portValue);
       }
     }
 
@@ -532,7 +538,10 @@ export class Parser {
       id: string | number
     ) => {
       const script = json.props?.[attrName];
-      if (script) conditions.set(id, script);
+      if (script) {
+        conditions.set(id, script);
+        otherAttributes.delete(attrName);
+      }
     };
 
     for (const key of getEnumKeys(PreCondition)) {
@@ -542,6 +551,8 @@ export class Parser {
     for (const key of getEnumKeys(PostCondition)) {
       addCondition(config.postConditions, convertConditionToString(key), PostCondition[key]);
     }
+
+    config.otherAttributes = otherAttributes;
 
     //---------------------------------------------
 

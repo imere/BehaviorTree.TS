@@ -1,4 +1,4 @@
-import { TreeNode } from "./TreeNode";
+import { PostCondPairs, PreCondPairs, TreeNode } from "./TreeNode";
 import {
   Primitive,
   matchPattern,
@@ -86,10 +86,17 @@ export class Timestamp {
   ) {}
 }
 
-const forbidPortNamePatterns: Array<string | RegExp> = ["", "ID", "name", /^[^a-z]/i];
+const forbidPortNamePatterns: Array<string | RegExp> = ["", /^[^a-z]/i];
 
 export function isAllowedPortName(name: string): boolean {
-  return !matchPattern(forbidPortNamePatterns, name);
+  if (matchPattern(forbidPortNamePatterns, name)) return false;
+  return !isReservedAttribute(name);
+}
+
+export function isReservedAttribute(name: string): boolean {
+  if (PreCondPairs.some(([, value]) => value === name)) return true;
+  if (PostCondPairs.some(([, value]) => value === name)) return true;
+  return ["name", "ID", "_autoremap"].includes(name);
 }
 
 export function createPortInfo<V extends Primitive | { toString(this: V): string }>(
