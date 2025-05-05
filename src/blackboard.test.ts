@@ -269,6 +269,50 @@ describe("BlackboardTest", () => {
     expect(status).toBe(NodeStatus.SUCCESS);
   });
 
+  test("RootBlackboard", async () => {
+    const factory = new TreeFactory();
+
+    const xml = `
+      <root BTTS_format="4" >
+        <BehaviorTree ID="SubA">
+          <Sequence>
+            <SubTree ID="SubB" />
+            <Script code=" _B_var3=3 " />
+          </Sequence>
+        </BehaviorTree>
+    
+        <BehaviorTree ID="SubB">
+          <Sequence>
+            <SaySomething message="{_B_msg}" />
+            <Script code=" _B_var4=4 " />
+          </Sequence>
+        </BehaviorTree>
+    
+        <BehaviorTree ID="MainTree">
+          <Sequence>
+            <Script code=" msg='hello' " />
+            <SubTree ID="SubA" />
+    
+            <Script code=" var1=1 " />
+            <Script code=" _B_var2=2 " />
+          </Sequence>
+        </BehaviorTree>
+      </root>
+    `;
+
+    factory.registerNodeType(SaySomething, SaySomething.name);
+    factory.registerTreeFromXML(xml);
+    const tree = factory.createTree("MainTree");
+
+    const status = await tree.tickWhileRunning();
+    expect(status).toBe(NodeStatus.SUCCESS);
+
+    expect(tree.rootBlackboard!.get("var1")).toBe(1);
+    expect(tree.rootBlackboard!.get("var2")).toBe(2);
+    expect(tree.rootBlackboard!.get("var3")).toBe(3);
+    expect(tree.rootBlackboard!.get("var4")).toBe(4);
+  });
+
   test("TimestampedInterface", () => {
     const bb = Blackboard.create();
 

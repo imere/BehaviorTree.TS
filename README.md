@@ -28,6 +28,14 @@ import from `src`
 ```diff
 - <root BTCPP_format=
 + <root BTTS_format=
+
+# Only support JavaScript code
+- <Script code=" value:=1 " />
++ <Script code=" value=1 " />
+
+# Experimental syntax for entries in the root blackboard
+- <Script code=" @value=1 " />
++ <Script code=" _B_value=1 " />
 ```
 
 ## License

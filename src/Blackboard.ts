@@ -21,6 +21,9 @@ export class StampedValue<T = unknown> {
   ) {}
 }
 
+const ROOT_KEY_PREFIX = "_B_";
+const ROOT_KEY_REGEXP = RegExp(`^${ROOT_KEY_PREFIX}\\S+`);
+
 export class Blackboard {
   static create(parent?: Blackboard): Blackboard {
     return new Blackboard(parent);
@@ -107,6 +110,10 @@ export class Blackboard {
     if (this._storage.has(key)) return this._storage.get(key)!.info;
   }
 
+  entryInfo(key: PropertyKey): PortInfo | undefined {
+    return this.getEntry(key)?.info;
+  }
+
   addSubtreeRemapping(internal: string, external: string): void {
     this.internalToExternal.set(internal, external);
   }
@@ -143,11 +150,24 @@ export class Blackboard {
     }
   }
 
+  createEntry(key: PropertyKey, info: PortInfo): Entry {
+    key = String(key);
+
+    if (ROOT_KEY_REGEXP.test(key)) {
+      if (key.slice(ROOT_KEY_PREFIX.length).includes("@")) {
+        throw new Error("Character '@' used multiple times in the key");
+      }
+      return this.rootBlackboard.createEntryImpl(key.slice(ROOT_KEY_PREFIX.length), info);
+    } else {
+      return this.createEntryImpl(key, info);
+    }
+  }
+
   /**
    * This function might be called recursively, when we do remapping, because we move
    * to the top scope to find already existing entries
    */
-  createEntry(key: PropertyKey, info: PortInfo): Entry {
+  private createEntryImpl(key: PropertyKey, info: PortInfo): Entry {
     if (this._storage.has(key)) return this._storage.get(key)!;
 
     // manual remapping first
@@ -170,20 +190,23 @@ export class Blackboard {
   }
 
   getEntry(key: PropertyKey): Entry | undefined {
+    key = String(key);
+
+    if (ROOT_KEY_REGEXP.test(key)) {
+      if (this.parent) return this.parent.getEntry(key);
+      else return this.getEntry(key.slice(ROOT_KEY_PREFIX.length));
+    }
+
     if (this._storage.has(key)) return this._storage.get(key)!;
     // not found. Try autoremapping
     if (this.parent) {
       if (this.internalToExternal.has(key)) {
         const newKey = this.internalToExternal.get(key)!;
-        const entry = this.parent.getEntry(newKey);
-        if (entry) this._storage.set(key, entry);
-        return entry;
+        return this.parent.getEntry(newKey);
       }
 
       if (this.autoRemapping && !isPrivateKey(key)) {
-        const entry = this.parent.getEntry(key);
-        if (entry) this._storage.set(key, entry);
-        return entry;
+        return this.parent.getEntry(key);
       }
     }
   }
@@ -193,5 +216,11 @@ export class Blackboard {
     if (entry) {
       return new StampedValue<T>(entry!.value, new Timestamp(entry.stamp, entry.sequence_id));
     }
+  }
+
+  get rootBlackboard() {
+    let parent = this as Blackboard;
+    while (parent && parent.parent) parent = parent.parent;
+    return parent;
   }
 }
