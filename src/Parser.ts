@@ -248,6 +248,26 @@ export class Parser {
           expect(node, 1);
         } else if (search === NodeType.Control) {
           expect(node, Infinity);
+          if (name === "ReactiveSequence") {
+            let asyncCount = 0;
+            for (const { name: childName } of node.children || []) {
+              const childType = registeredNodes.get(childName);
+              if (
+                childType === NodeType.Control &&
+                [
+                  "ThreadedAction",
+                  "StatefulActionNode",
+                  "CoroActionNode",
+                  "AsyncSequence",
+                ].includes(childName)
+              ) {
+                asyncCount++;
+                if (asyncCount > 1) {
+                  throw new Error("A ReactiveSequence cannot have more than one async child.");
+                }
+              }
+            }
+          }
         }
       }
 

@@ -72,4 +72,31 @@ describe("Reactive", () => {
 
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
+
+  test("TwoAsyncNodesInReactiveSequence", async () => {
+    const xml = `
+      <root BTTS_format="4" >
+        <BehaviorTree ID="MainTree">
+          <ReactiveSequence>
+            <AsyncSequence name="first">
+              <TestA/>
+              <TestB/>
+              <TestC/>
+            </AsyncSequence>
+            <AsyncSequence name="second">
+              <TestD/>
+              <TestE/>
+              <TestF/>
+            </AsyncSequence>
+          </ReactiveSequence>
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    const counters = Array.from<number>({ length: 6 });
+    registerTestTick(factory, "Test", counters);
+
+    expect(() => factory.createTreeFromXML(xml)).toThrow();
+  });
 });
