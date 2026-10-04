@@ -1,5 +1,6 @@
 import { SyncActionNode } from "./ActionNode.js";
 import { TreeFactory } from "./TreeFactory.js";
+import { PortDirection, PortInfo } from "./basic.js";
 import type { Converter, NodeConfig } from "./TreeNode.js";
 import {
   ImplementPorts,
@@ -429,5 +430,52 @@ describe("PortTest", () => {
     tree.subtrees[0].blackboard.set("msgC", "hola");
 
     expect(await tree.tickOnce()).toBe(NodeStatus.SUCCESS);
+  });
+});
+
+describe("BehaviorTree.CPPIssue953_StoredPortConverter", () => {
+  // A port that carries its own converter must win over the caller's default,
+  // so a custom type survives without every call site restating the parser.
+  class Point {
+    constructor(
+      public x: number,
+      public y: number
+    ) {}
+  }
+
+  const parsePoint = (raw: string): Point => {
+    const [x, y] = raw.split(",").map(Number);
+    return new Point(x, y);
+  };
+
+  class ReadPoint extends SyncActionNode {
+    static providedPorts() {
+      return new PortList([["target", new PortInfo(PortDirection.INPUT, parsePoint)]]);
+    }
+    seen: Point | undefined;
+    protected override tick(): NodeUserStatus {
+      this.seen = this.getInput<Point>("target");
+      return NodeStatus.SUCCESS;
+    }
+  }
+
+  test("the port's own converter parses the value", async () => {
+    const factory = new TreeFactory();
+    factory.registerNodeType(ReadPoint, "ReadPoint");
+
+    const xml = `
+      <root BTTS_format="4" mainTreeToExecute="MainTree">
+        <BehaviorTree ID="MainTree">
+          <ReadPoint target="3,4"/>
+        </BehaviorTree>
+      </root>
+    `;
+    const tree = factory.createTreeFromXML(xml);
+    await tree.tickExactlyOnce();
+
+    const node = tree.rootNode as unknown as ReadPoint;
+    expect(node.seen).toBeInstanceOf(Point);
+    expect(node.seen!.x).toBe(3);
+    expect(node.seen!.y).toBe(4);
   });
 });

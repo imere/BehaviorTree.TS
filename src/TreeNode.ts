@@ -197,7 +197,12 @@ export class TreeNode extends Emitter<{
   }
 
   getInput<R = string>(key: string, convert: Converter<R> = defaultConvert): R | undefined {
+    // a converter stored on the port wins over the caller's, so a port can
+    // carry its own parsing for custom types; the enums registry is the
+    // fallback, matching upstream
+    const portConverter = this.config.manifest?.ports.get(key)?.converter;
     const parseString: Converter<R | undefined> = (str: string, ...args): R | undefined => {
+      if (portConverter) return portConverter(str) as R | undefined;
       if (this.config.enums.has(str)) {
         return this.config.enums.get(str) as R;
       }

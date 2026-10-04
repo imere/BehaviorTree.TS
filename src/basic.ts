@@ -44,11 +44,19 @@ export enum PortDirection {
   INOUT,
 }
 
+/** A port's own string parser, supplied at registration time. */
+export type StringConverter<R = unknown> = (portValue: string) => R;
+
 export class PortInfo {
   constructor(
     public readonly direction: PortDirection = PortDirection.INOUT,
-    private readonly converter?: <R = any>(string: string) => R
+    private readonly converter_?: StringConverter
   ) {}
+
+  /** This port's own string parser, when one was supplied at registration. */
+  get converter(): StringConverter | undefined {
+    return this.converter_;
+  }
 
   description = "";
 
@@ -68,10 +76,6 @@ export class PortInfo {
   get defaultValueString() {
     return this._defaultValueString;
   }
-
-  // parseString<R = any>(string: string): R | undefined {
-  //   if (this.converter) return this.converter(string);
-  // }
 }
 
 /** type checking */
