@@ -88,6 +88,14 @@ export class Timestamp {
 
 const forbidPortNamePatterns: Array<string | RegExp> = ["", /^[^a-z]/i];
 
+export function findForbiddenChar(name: string): string | undefined {
+  if (name === "") return "(empty)";
+  const first = name[0];
+  if (!/^[a-z]$/i.test(first)) return `'${first}'`;
+  if (isReservedAttribute(name)) return `'${name}'`;
+  return;
+}
+
 export function isAllowedPortName(name: string): boolean {
   if (matchPattern(forbidPortNamePatterns, name)) return false;
   return !isReservedAttribute(name);
@@ -121,7 +129,8 @@ export function createPort<K extends string, V extends Primitive | { toString(th
 ): [K, PortInfo] {
   if (!isAllowedPortName(name)) {
     throw new Error(
-      `The name of a port must not be [${forbidPortNamePatterns}], and must start with an alphabetic character. Underscore is reserved.`
+      `Port name '${name}' contains forbidden character ${findForbiddenChar(name)}. ` +
+        `A port name must start with an alphabetic character. Underscore is reserved.`
     );
   }
 
