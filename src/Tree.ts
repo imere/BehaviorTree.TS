@@ -4,6 +4,7 @@ import { ControlNode } from "./ControlNode.js";
 import { DecoratorNode } from "./DecoratorNode.js";
 import { TreeNode } from "./TreeNode.js";
 import { NodeType } from "./basic.js";
+import { info } from "./Logger.js";
 import { SubTreeNode } from "./decorators/SubtreeNode.js";
 import { type AbstractConstructorType, type ConstructorType } from "./utils/index.js";
 
@@ -28,7 +29,7 @@ export function applyRecursiveVisitor(
 
 export function printTreeRecursively(
   root: TreeNode,
-  line: (line: string) => void = console.log
+  line: (line: string) => void = (text) => info(text)
 ): void {
   print(0, root);
 

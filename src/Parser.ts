@@ -8,6 +8,7 @@ import {
 } from "./basic.js";
 import { Blackboard } from "./Blackboard.js";
 import { ControlNode } from "./ControlNode.js";
+import { warn } from "./Logger.js";
 import { DecoratorNode } from "./DecoratorNode.js";
 import { SubTreeNode } from "./decorators/SubtreeNode.js";
 import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports.js";
@@ -154,7 +155,7 @@ export class Parser {
 
   private _loadFromObject(json: TreeObject): void {
     if (!json.props?.BTTS_format) {
-      console.warn("The first tag of the (<root>) should contain the attribute [BTTS_format]");
+      warn("The first tag of the (<root>) should contain the attribute [BTTS_format]");
     }
 
     // Collect the names of all nodes registered with the behavior tree factory
