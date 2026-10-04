@@ -1,7 +1,7 @@
-import { Parser } from "./Parser";
-import { TreeFactory } from "./TreeFactory";
-import { Metadata, NodeStatus } from "./basic";
-import { SaySomething } from "./sample/DummyNodes";
+import { Parser } from "./Parser.js";
+import { TreeFactory } from "./TreeFactory.js";
+import { Metadata, NodeStatus } from "./basic.js";
+import { SaySomething } from "./sample/DummyNodes.js";
 
 function makeTestMetadata(): Metadata {
   return new Metadata([
@@ -21,6 +21,22 @@ describe("BehaviorTreeFactory", () => {
     const factory = new TreeFactory();
     const parser = new Parser(factory);
     expect(() => parser.loadFromXML(xml)).toThrow();
+  });
+
+  test("BehaviorTree.CPPIssue931_NotRegisteredNode", () => {
+    const xml = `
+      <root BTTS_format="4">
+        <BehaviorTree ID="MainTree">
+          <Fallback name="root_selector">
+            <IsDoorOpen/>
+          </Fallback>
+        </BehaviorTree>
+      </root>
+    `;
+    const factory = new TreeFactory();
+    const parser = new Parser(factory);
+    expect(() => parser.loadFromXML(xml)).toThrow(/Node not recognized/);
+    expect(() => new Parser(factory).loadFromXML(xml)).toThrow(/Node not recognized/);
   });
 
   test("WrongTreeName", () => {
