@@ -1,5 +1,6 @@
 import { StatefulActionNode, SyncActionNode } from "./ActionNode.js";
 import { TreeFactory } from "./TreeFactory.js";
+import { debug } from "./Logger.js";
 import { NodeStatus, PortList, createOutputPort, type NodeUserStatus } from "./basic.js";
 import { registerTestTick } from "./testing/helper.js";
 
@@ -205,7 +206,7 @@ describe("Preconditions", () => {
     }
 
     override onHalted(): void {
-      console.log("Node halted");
+      debug("Node halted");
     }
   }
 
