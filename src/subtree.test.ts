@@ -507,3 +507,25 @@ describe("Subtree", () => {
     expect(() => factory.createTree("A")).toThrow(/Recursive subtree/);
   });
 });
+
+describe("BehaviorTree.CPPIssue1053_DuplicateSubtreeName", () => {
+  // two SubTree nodes with the same name, under different parents
+  const xml = `
+    <root BTTS_format="4">
+      <BehaviorTree ID="MainTree">
+        <Sequence name="parent1">
+          <SubTree ID="Child" name="dup"/>
+          <Sequence name="parent2">
+            <SubTree ID="Child" name="dup"/>
+          </Sequence>
+        </Sequence>
+      </BehaviorTree>
+      <BehaviorTree ID="Child">
+        <AlwaysSuccess/>
+      </BehaviorTree>
+    </root>
+  `;
+  const factory = new TreeFactory();
+  factory.registerTreeFromXML(xml);
+  expect(() => factory.createTree("MainTree")).toThrow(/Duplicate SubTree path/);
+});

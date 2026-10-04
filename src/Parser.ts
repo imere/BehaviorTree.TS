@@ -485,6 +485,15 @@ export class Parser {
         if (subtreePath) subtreePath += "/";
         subtreePath += json.props?.name || `${subtreeId}::${node.uid}`;
 
+        if (tree.subtrees.some((existing) => existing.name === subtreePath)) {
+          throw new Error(
+            `Duplicate SubTree path detected: '${subtreePath}'. SubTree nodes in the ` +
+              `same tree cannot share a 'name' attribute, even under different ` +
+              `parent nodes. Please use unique names or omit the 'name' attribute ` +
+              `to auto-generate unique paths.`
+          );
+        }
+
         this.recursivelyCreateSubtree(
           subtreeId,
           subtreePath,
