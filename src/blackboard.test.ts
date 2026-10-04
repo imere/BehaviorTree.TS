@@ -319,35 +319,43 @@ describe("BlackboardTest", () => {
     // still empty, expected to fail
     expect(bb.getStamped("value")).not.toBeDefined();
 
-    let nsec_before = now();
+    // set() stamps with its own Date.now() call, so the stamp can only be
+    // pinned to the window the set happened in, not to one exact millisecond
+    let before = now();
     bb.set("value", 42);
+    let after = now();
     let result = bb.getStamped("value");
     let value = result?.value;
     let stamp_opt = result?.stamp;
 
     expect(result?.value).toBe(42);
     expect(result?.stamp.seq).toBe(1);
-    expect(result?.stamp.time).toBe(nsec_before);
+    expect(result?.stamp.time).toBeGreaterThanOrEqual(before);
+    expect(result?.stamp.time).toBeLessThanOrEqual(after);
 
     expect(value).toBe(42);
     expect(stamp_opt).toBeDefined();
     expect(stamp_opt?.seq).toBe(1);
-    expect(stamp_opt?.time).toBe(nsec_before);
+    expect(stamp_opt?.time).toBeGreaterThanOrEqual(before);
+    expect(stamp_opt?.time).toBeLessThanOrEqual(after);
 
-    nsec_before = now();
+    before = now();
     bb.set("value", 69);
+    after = now();
     result = bb.getStamped("value");
     value = result?.value;
     stamp_opt = result?.stamp;
 
     expect(result?.value).toBe(69);
     expect(result?.stamp.seq).toBe(2);
-    expect(result?.stamp.time).toBe(nsec_before);
+    expect(result?.stamp.time).toBeGreaterThanOrEqual(before);
+    expect(result?.stamp.time).toBeLessThanOrEqual(after);
 
     expect(value).toBe(69);
     expect(stamp_opt).toBeDefined();
     expect(stamp_opt?.seq).toBe(2);
-    expect(stamp_opt?.time).toBe(nsec_before);
+    expect(stamp_opt?.time).toBeGreaterThanOrEqual(before);
+    expect(stamp_opt?.time).toBeLessThanOrEqual(after);
   });
 });
 

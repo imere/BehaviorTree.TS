@@ -16,6 +16,7 @@ import { getEnumKeys } from "./utils/index.js";
 import { Emitter } from "./utils/Emitter.js";
 import { WakeUpSignal } from "./utils/WakeUpSignal.js";
 import { now } from "./utils/date-time.js";
+import { fail } from "./xml/XmlError.js";
 
 /** This information is used mostly by the Parser. */
 export class TreeNodeManifest {
@@ -81,6 +82,11 @@ export class NodeConfig {
   uid = 0;
 
   path = "";
+
+  /** Where the element that declared this node was written, if it was XML. */
+  line?: number;
+
+  column?: number;
 
   preConditions = new Map<PreCondition, string>();
 
@@ -248,7 +254,7 @@ export class TreeNode extends Emitter<{
         this.registrationId === this.name || !this.registrationId
           ? this.name
           : `${this.name}(${this.registrationId})`;
-      throw new Error(`${name}: missing port [${key}]`);
+      fail(this.config, `${name}: missing port [${key}]`);
     }
     return ret;
   }

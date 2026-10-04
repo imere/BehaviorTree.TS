@@ -11,7 +11,10 @@ import { ControlNode } from "./ControlNode.js";
 import { warn } from "./Logger.js";
 import { DecoratorNode } from "./DecoratorNode.js";
 import { SubTreeNode } from "./decorators/SubtreeNode.js";
-import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports.js";
+import { parseXmlDocument } from "./xml/XmlDocument.js";
+import { fail, type Positioned } from "./xml/XmlError.js";
+import { toTreeObject, type TreeNodeObject, type TreeObject } from "./xml/TreeObject.js";
+import { verifyTreeObject as verify } from "./xml/verifyTree.js";
 import { type EnumsTable } from "./scripting/parser.js";
 import { Subtree, Tree, type TreeFactory } from "./TreeFactory.js";
 import {
@@ -26,6 +29,8 @@ import {
 } from "./TreeNode.js";
 import { getEnumKeys } from "./utils/index.js";
 
+export { type TreeNodeObject, type TreeObject };
+
 export const convertFromString = (scriptingEnums: EnumsTable, value: string | undefined) => {
   if (value === undefined) return;
   if (scriptingEnums.has(value)) return scriptingEnums.get(value);
@@ -36,72 +41,15 @@ export const convertFromString = (scriptingEnums: EnumsTable, value: string | un
   }
 };
 
-export interface TreeObject {
-  name: string;
-  props?: Partial<Record<"BTTS_format" | (string & {}), string>>;
-  children: TreeNodeObject[];
-}
-
-export interface TreeNodeObject {
-  name: string;
-  props?: Partial<Record<"ID" | "name" | (string & {}), string>>;
-  children?: TreeNodeObject[];
-}
-
+/** What a <TreeNodesModel> declares about one subtree, keyed by subtree ID. */
 interface SubtreeModel {
   ports: PortList;
 }
 
+type SubtreeModels = Map<string, SubtreeModel>;
+
 export function parseXML(xml: string): TreeObject {
-  xml = xml.trim();
-
-  const ret: TreeObject = { name: "root", children: [] };
-  const doc = parseDocument(xml, { xmlMode: true }) as unknown as Element;
-
-  for (const element of withoutSpecialTextChildren(doc)) {
-    if (element.type === ElementType.Text && !element.data?.trim()) continue;
-    setNode(ret, element);
-  }
-
-  return ret;
-
-  function setNode(parent: TreeNodeObject, element: Element): void {
-    if (element.type === ElementType.Text) {
-      return;
-    }
-
-    parent.name = element.name;
-    parent.props = element.attribs;
-
-    let children = withoutSpecialTextChildren(element);
-    const shouldStripText = children.some((child) => child.type === ElementType.Tag);
-    const shouldStitchText =
-      !shouldStripText && children.every((child) => child.type === ElementType.Text);
-
-    if (shouldStripText) {
-      children = children.filter((child) => child.type !== ElementType.Text);
-    }
-
-    if (shouldStitchText) {
-      return;
-    }
-
-    for (const elem of children) {
-      const node: TreeNodeObject = {
-        name: "",
-        props: {},
-        children: [],
-      };
-      parent.children?.push(node);
-      setNode(node, elem);
-    }
-  }
-
-  function withoutSpecialTextChildren(element: Element): Element[] {
-    return (element.children || []).filter((child) => {
-      return child.type !== ElementType.CDATA && child.type !== ElementType.Comment;
-    });
-  }
+  return toTreeObject(parseXmlDocument(xml));
 }
 
 export class Parser {
@@ -109,7 +57,7 @@ export class Parser {
 
   private treeRoots: Map<string, TreeNodeObject>;
 
-  private subtreeModels = new Map<string, SubtreeModel>();
+  private subtreeModels: SubtreeModels = new Map();
 
   private suffixCount = 0;
 
@@ -126,198 +74,37 @@ export class Parser {
     this.loadFromObject(parseXML(xml));
   }
 
-  loadSubtreeModel(_json: TreeObject): void {
-    // for (
-    //   let modelsNodeIdx = json.children.findIndex((child) => child.name === "TreeNodesModel"),
-    //     modelsNode = json.children[modelsNodeIdx];
-    //   modelsNode;
-    //   modelsNodeIdx = json.children.findIndex(
-    //     (child, i) => modelsNodeIdx < i && child.name === "TreeNodesModel"
-    //   )
-    // ) {
-    //   for (
-    //     let subNodeIdx = modelsNode.children?.findIndex((child) => child.name === "SubTree"),
-    //       subNode = modelsNode.children?.[subNodeIdx!];
-    //     subNode;
-    //     subNodeIdx = modelsNode.children?.findIndex(
-    //       (child, i) => subNodeIdx! < i && child.name === "SubTree"
-    //     )
-    //   ) {
-    //     const subtreeId = subNode.props?.ID;
-    //   }
-    // }
-  }
-
   loadFromObject(json: TreeObject): void {
     this.openedDocuments.push(json);
-    this._loadFromObject(json);
-  }
 
-  private _loadFromObject(json: TreeObject): void {
     if (!json.props?.BTTS_format) {
       warn("The first tag of the (<root>) should contain the attribute [BTTS_format]");
     }
 
-    // Collect the names of all nodes registered with the behavior tree factory
+    this.verifyTreeObject(json, this.registeredNodeTypes());
+    this.loadSubtreeModel(json);
+
+    for (const node of json.children) {
+      this.treeRoots.set(node.props?.ID || `Tree_${this.suffixCount++}`, node);
+    }
+  }
+
+  /** <TreeNodesModel> is not parsed yet, so no model is ever available. */
+  loadSubtreeModel(_json: TreeObject): void {}
+
+  private registeredNodeTypes(): Map<string, NodeType> {
     const registeredNodes = new Map<string, NodeType>();
     for (const [key, { type }] of this.factory.manifests) {
       registeredNodes.set(key, type);
     }
-
-    this.verifyTreeObject(json, registeredNodes);
-
-    this.loadSubtreeModel(json);
-
-    for (let i = 0, node: TreeNodeObject; (node = json.children[i]); i++) {
-      const treeName = node.props?.ID || `Tree_${this.suffixCount++}`;
-      this.treeRoots.set(treeName, node);
-    }
+    return registeredNodes;
   }
 
   verifyTreeObject(
     json: TreeObject | undefined | null,
     registeredNodes: Map<string, NodeType>
   ): void {
-    const root = json;
-
-    if (!root || root.name !== "root") {
-      throw new Error("The doc must have a root node called <root>");
-    }
-
-    //-------------------------------------------------
-
-    const modelsRoots = root.children.filter((o) => o.name === "TreeNodesModel");
-    const modelsRoot = modelsRoots[0];
-
-    if (modelsRoots.length > 1) {
-      throw new Error("Only a single node <TreeNodesModel> is supported");
-    }
-
-    if (modelsRoot) {
-      // not having a MetaModel is not an error. But consider that the
-      // Graphical editor needs it.
-      for (const node of root.children) {
-        const { name } = node;
-        if (["Action", "Decorator", "SubTree", "Condition", "Control"].includes(name)) {
-          const id = node.props?.ID;
-          if (!id) {
-            throw new Error(`${name}: The attribute  [ID] is mandatory`);
-          }
-        }
-      }
-    }
-
-    //-------------------------------------------------
-
-    const behavior_tree_count = root.children.filter((o) => o.name === "BehaviorTree").length;
-
-    // function to be called recursively
-    const MAX_NESTING_DEPTH = 256;
-    const recursiveStep = (node: TreeNodeObject, depth = 0) => {
-      if (depth > MAX_NESTING_DEPTH) {
-        throw new Error(
-          `Maximum XML nesting depth exceeded (limit: ${MAX_NESTING_DEPTH}). ` +
-            `The XML is too deeply nested.`
-        );
-      }
-      const { name } = node;
-      const id = node.props?.ID as string | undefined;
-
-      const isBuiltin = ["Decorator", "Action", "Condition", "Control", "SubTree"].includes(name);
-      if (isBuiltin && !id) {
-        throw new Error(`The tag <${name}> must have the attribute [ID]`);
-      }
-
-      if (name === "SubTree") {
-        expect(node, 0);
-        if (registeredNodes.has(id as string)) {
-          throw new Error(
-            "The attribute [ID] of tag <SubTree> must not use the name of a registered Node"
-          );
-        }
-      } else if (name === "BehaviorTree") {
-        expect(node, 1);
-        if (!id && behavior_tree_count > 1) {
-          throw new Error("The tag <BehaviorTree> must have the attribute [ID]");
-        }
-        if (registeredNodes.has(id as string)) {
-          throw new Error(
-            "The attribute [ID] of tag <BehaviorTree> must not use the name of a registered Node"
-          );
-        }
-      } else if (!["Sequence", "Fallback"].includes(name)) {
-        // builtin node types are looked up by their ID, everything else by the
-        // element name
-        const lookupName = isBuiltin ? (id as string) : name;
-        const search = registeredNodes.get(lookupName);
-        if (search === undefined) {
-          throw new Error(`Node not recognized: ${lookupName}`);
-        }
-
-        if (search === NodeType.Decorator) {
-          expect(node, 1);
-        } else if (search === NodeType.Action || search === NodeType.Condition) {
-          expect(node, 0);
-        } else if (search === NodeType.Control) {
-          expect(node, Infinity);
-          // keyed off the registration, as upstream does, so
-          // <Control ID="ReactiveSequence"> is checked too
-          if (lookupName === "ReactiveSequence") {
-            let asyncCount = 0;
-            for (const { name: childName } of node.children || []) {
-              const childType = registeredNodes.get(childName);
-              if (childType === undefined) {
-                throw new Error(`Unknown node type: ${childName}`);
-              }
-              if (
-                childType === NodeType.Control &&
-                [
-                  "ThreadedAction",
-                  "StatefulActionNode",
-                  "CoroActionNode",
-                  "AsyncSequence",
-                ].includes(childName)
-              ) {
-                asyncCount++;
-                if (asyncCount > 1) {
-                  throw new Error("A ReactiveSequence cannot have more than one async child.");
-                }
-              }
-            }
-          }
-        }
-      }
-
-      //recursion
-      for (const child of node.children || []) {
-        recursiveStep(child, depth + 1);
-      }
-    };
-
-    for (const btRoot of root.children.filter((o) => o.name === "BehaviorTree")) {
-      recursiveStep(btRoot);
-    }
-
-    function expect(node: TreeNodeObject, childrenCount: number, propNames?: string[]) {
-      const { name } = node;
-      const count = node.children?.length || 0;
-      if (childrenCount === Infinity) {
-        if (!count) {
-          throw new Error(`The tag <${name}> must  have at least 1 child`);
-        }
-      } else if (count !== childrenCount) {
-        throw new Error(
-          `The tag <${name}> must ${
-            childrenCount ? `have exactly ${childrenCount}` : "not have any"
-          } child`
-        );
-      }
-      propNames?.forEach((prop) => {
-        if (!node.props?.[prop]) {
-          throw new Error(`The tag <${name}> must have the attribute [${prop}]`);
-        }
-      });
-    }
+    verify(json, registeredNodes);
   }
 
   instantiateTree(
@@ -334,13 +121,13 @@ export class Parser {
         if (this.treeRoots.size === 1) {
           mainTreeId = [...this.treeRoots.keys()][0];
         } else {
-          throw new Error("[mainTreeToExecute] was not specified correctly");
+          fail(firstRoot, "[mainTreeToExecute] was not specified correctly");
         }
       }
     }
 
     if (!rootBlackboard) {
-      throw new Error("instantiateTree needs a non-empty root_blackboard");
+      fail(undefined, "instantiateTree needs a non-empty root_blackboard");
     }
 
     this.recursivelyCreateSubtree(
@@ -351,7 +138,8 @@ export class Parser {
       rootBlackboard,
       new TreeNode("", new NodeConfig()),
       params,
-      new Set<string>()
+      new Set<string>(),
+      undefined
     );
 
     ret.initialize();
@@ -367,11 +155,12 @@ export class Parser {
     blackboard: Blackboard,
     rootNode: TreeNode,
     params: { scriptingEnums: EnumsTable },
-    ancestors: Set<string> = new Set()
+    ancestors: Set<string> = new Set(),
+    origin?: Positioned
   ): void {
     if (treeId !== undefined) {
       if (ancestors.has(treeId)) {
-        throw new Error(`Recursive subtree detected: [${treeId}] refers to itself`);
+        fail(origin, `Recursive subtree detected: [${treeId}] refers to itself`);
       }
       ancestors.add(treeId);
     }
@@ -385,7 +174,8 @@ export class Parser {
         blackboard,
         rootNode,
         params,
-        ancestors
+        ancestors,
+        origin
       );
     } finally {
       // a subtree may legitimately be referenced from several branches, so
@@ -402,15 +192,29 @@ export class Parser {
     blackboard: Blackboard,
     rootNode: TreeNode,
     params: { scriptingEnums: EnumsTable },
-    ancestors: Set<string>
+    ancestors: Set<string>,
+    origin?: Positioned
   ): void {
+    if (treeId === undefined || !this.treeRoots.has(treeId)) {
+      fail(origin, `Can't find a tree with name: ${treeId}`);
+    }
+
+    const root = this.treeRoots.get(treeId)!.children![0];
+
+    const newTree = new Subtree();
+    newTree.blackboard = blackboard;
+    newTree.name = treeName;
+    newTree.id = treeId;
+    tree.subtrees.push(newTree);
+
+    //-------- start recursion -----------
+
     const recursiveStep = (
       parent: TreeNode,
       subtree: Subtree,
       prefix: string,
       json: TreeNodeObject
     ): void => {
-      // create the node
       const node = this.createNodeFromObject(json, blackboard, parent, prefix, tree);
       subtree.nodes.push(node);
 
@@ -419,111 +223,111 @@ export class Parser {
         for (const child of json.children || []) {
           recursiveStep(node, subtree, prefix, child);
         }
-      } else {
-        const newBB = Blackboard.create(blackboard);
-        const subtreeId = json.props?.ID;
-        const subtreeRemapping = new Map();
-        let doAutoRemap = false;
+        return;
+      }
 
-        for (let [attrName, attrValue] of Object.entries(json.props || {})) {
-          if (attrValue === "{=}") attrValue = `{${attrName}}`;
+      const newBB = Blackboard.create(blackboard);
+      const subtreeId = json.props?.ID;
+      const { remapping, autoRemap } = this.readSubtreePorts(json, newBB, params);
 
-          if (attrName === "_autoremap") {
-            doAutoRemap = convertFromString(params.scriptingEnums, attrValue);
-            newBB.enableAutoRemapping(doAutoRemap);
-            continue;
-          }
+      this.applySubtreeModel(json, subtreeId!, remapping, autoRemap);
 
-          if (!isAllowedPortName(attrName)) continue;
-
-          subtreeRemapping.set(attrName, convertFromString(params.scriptingEnums, attrValue));
+      for (const [attrName, attrValue] of remapping) {
+        const portName = TreeNode.stripBlackboardPointer(attrValue);
+        if (portName) {
+          newBB.addSubtreeRemapping(attrName, portName);
+        } else {
+          // constant string: just set that constant value into the BB
+          // IMPORTANT: this must not be auto remapped!!!
+          newBB.enableAutoRemapping(false);
+          newBB.set(attrName, convertFromString(params.scriptingEnums, attrValue));
+          newBB.enableAutoRemapping(autoRemap);
         }
-        // check if this subtree has a model. If it does,
-        // we want to check if all the mandatory ports were remapped and
-        // add default ones, if necessary
-        if (this.subtreeModels.has(subtreeId!)) {
-          const subtreeModel = this.subtreeModels.get(subtreeId!)!;
-          const subtreeModelPorts = subtreeModel.ports;
-          // check if:
-          // - remapping contains mandatory ports
-          // - if any of these has default value
-          for (const [portName, portInfo] of subtreeModelPorts) {
-            // don't override existing remapping
-            if (!subtreeRemapping.has(portName) && !doAutoRemap) {
-              // remapping is not explicitly defined in the XML: use the model
-              if (typeof portInfo.defaultValue === "undefined") {
-                throw new Error(
-                  [
-                    'In the <TreeNodesModel> the <SubTree ID="',
-                    subtreeId,
-                    '"> is defining a mandatory port called [',
-                    portName,
-                    "], but you are not remapping it",
-                  ].join("")
-                );
-              } else {
-                subtreeRemapping.set(portName, portInfo.defaultValue);
-              }
-            }
-          }
-        }
+      }
 
-        for (const [attrName, attrValue] of subtreeRemapping) {
-          if (TreeNode.stripBlackboardPointer(attrValue)) {
-            // do remapping
-            const portName = TreeNode.stripBlackboardPointer(attrValue)!;
-            newBB.addSubtreeRemapping(attrName, portName);
-          } else {
-            // constant string: just set that constant value into the BB
-            // IMPORTANT: this must not be auto remapped!!!
-            newBB.enableAutoRemapping(false);
-            newBB.set(attrName, convertFromString(params.scriptingEnums, attrValue));
-            newBB.enableAutoRemapping(doAutoRemap);
-          }
-        }
+      let subtreePath = subtree.name;
+      if (subtreePath) subtreePath += "/";
+      subtreePath += json.props?.name || `${subtreeId}::${node.uid}`;
 
-        let subtreePath = subtree.name;
-        if (subtreePath) subtreePath += "/";
-        subtreePath += json.props?.name || `${subtreeId}::${node.uid}`;
-
-        if (tree.subtrees.some((existing) => existing.name === subtreePath)) {
-          throw new Error(
-            `Duplicate SubTree path detected: '${subtreePath}'. SubTree nodes in the ` +
-              `same tree cannot share a 'name' attribute, even under different ` +
-              `parent nodes. Please use unique names or omit the 'name' attribute ` +
-              `to auto-generate unique paths.`
-          );
-        }
-
-        this.recursivelyCreateSubtree(
-          subtreeId,
-          subtreePath,
-          `${subtreePath}/`,
-          tree,
-          newBB,
-          node,
-          params,
-          ancestors
+      if (tree.subtrees.some((existing) => existing.name === subtreePath)) {
+        fail(
+          json,
+          `Duplicate SubTree path detected: '${subtreePath}'. SubTree nodes in the ` +
+            `same tree cannot share a 'name' attribute, even under different ` +
+            `parent nodes. Please use unique names or omit the 'name' attribute ` +
+            `to auto-generate unique paths.`
         );
       }
+
+      this.recursivelyCreateSubtree(
+        subtreeId,
+        subtreePath,
+        `${subtreePath}/`,
+        tree,
+        newBB,
+        node,
+        params,
+        ancestors,
+        json
+      );
     };
 
-    if (treeId === undefined || !this.treeRoots.has(treeId)) {
-      throw new Error(`Can't find a tree with name: ${treeId}`);
+    recursiveStep(rootNode, newTree, prefixPath, root);
+  }
+
+  /** The attributes of a <SubTree> that are neither reserved nor its own name. */
+  private readSubtreePorts(
+    json: TreeNodeObject,
+    subtreeBB: Blackboard,
+    params: { scriptingEnums: EnumsTable }
+  ): { remapping: PortsRemapping; autoRemap: boolean } {
+    const remapping: PortsRemapping = new Map();
+    let autoRemap = false;
+
+    for (const [attrName, rawValue] of Object.entries(json.props || {})) {
+      if (rawValue === undefined) continue;
+      let attrValue = rawValue;
+
+      if (attrValue === "{=}") attrValue = `{${attrName}}`;
+
+      if (attrName === "_autoremap") {
+        autoRemap = Boolean(convertFromString(params.scriptingEnums, attrValue));
+        subtreeBB.enableAutoRemapping(autoRemap);
+        continue;
+      }
+
+      if (isAllowedPortName(attrName)) remapping.set(attrName, attrValue);
     }
 
-    const root = this.treeRoots.get(treeId)!.children![0];
+    return { remapping, autoRemap };
+  }
 
-    //-------- start recursion -----------
+  /**
+   * Fills in the remapping a <TreeNodesModel> asks for, unless the XML already
+   * declared it or the subtree remaps everything automatically.
+   */
+  private applySubtreeModel(
+    json: TreeNodeObject,
+    subtreeId: string,
+    remapping: PortsRemapping,
+    autoRemap: boolean
+  ): void {
+    const model = this.subtreeModels.get(subtreeId);
+    if (!model) return;
 
-    // Append a new subtree to the list
-    const newTree = new Subtree();
-    newTree.blackboard = blackboard;
-    newTree.name = treeName;
-    newTree.id = treeId;
-    tree.subtrees.push(newTree);
+    for (const [portName, portInfo] of model.ports) {
+      // don't override existing remapping
+      if (remapping.has(portName) || autoRemap) continue;
 
-    recursiveStep(rootNode, newTree, prefixPath, root);
+      if (typeof portInfo.defaultValue === "undefined") {
+        fail(
+          json,
+          `In the <TreeNodesModel> the <SubTree ID="${subtreeId}"> is defining a ` +
+            `mandatory port called [${portName}], but you are not remapping it`
+        );
+      }
+      remapping.set(portName, portInfo.defaultValueString);
+    }
   }
 
   createNodeFromObject(
@@ -533,94 +337,35 @@ export class Parser {
     prefixPath: string,
     tree: Tree
   ): TreeNode {
-    const [name, id] = [json.name, json.props?.ID];
-    const nodeType = convertNodeNameToNodeType(name);
-
-    // name used by the factory
-    let typeId: string;
-    if (nodeType === NodeType.Undefined) {
-      // This is the case of nodes like <MyCustomAction>
-      // check if the factory has this name
-      if (!this.factory.builders.has(name)) {
-        throw new Error(`${name} is not a registered node`);
-      }
-      typeId = name;
-      if (id) {
-        throw new Error(`Attribute [ID] is not allowed in <${typeId}>`);
-      }
-    } else {
-      typeId = id!;
-      // in this case, it is mandatory to have a field "ID"
-      if (!id) {
-        throw new Error(`Attribute [ID] is mandatory in <${typeId}>`);
-      }
-    }
+    const typeId = this.resolveTypeId(json);
 
     // By default, the instance name is equal to ID, unless the
     // attribute [name] is present.
-    const attrName = json.props?.name;
-    const instanceName = attrName || typeId;
+    const instanceName = json.props?.name || typeId;
 
     const manifest: TreeNodeManifest | undefined = this.factory.manifests.get(typeId);
-
-    const portRemap: PortsRemapping = new Map();
-    const otherAttributes: NonPortAttributes = new Map();
-
-    for (const [portName, portValue] of Object.entries(
-      (json.props || {}) as Record<string, string>
-    )) {
-      if (isAllowedPortName(portName)) {
-        if (manifest) {
-          if (!manifest.ports.has(portName)) {
-            throw new Error(
-              `A port with name [${portName}] is found in the XML, but not in the providedPorts()`
-            );
-          }
-        }
-
-        portRemap.set(portName, portValue);
-      } else if (!isReservedAttribute(portName)) {
-        otherAttributes.set(portName, portValue);
-      }
-    }
+    const { portRemap, otherAttributes } = readAttributes(json, manifest);
 
     const config = new NodeConfig();
     config.blackboard = blackboard;
     config.path = `${prefixPath}${instanceName}`;
     config.uid = tree.getUID();
     config.manifest = manifest;
+    config.otherAttributes = otherAttributes;
+    config.line = json.line;
+    config.column = json.column;
 
     if (typeId === instanceName) {
       config.path += `::${config.uid}`;
     }
 
-    const addCondition = (
-      conditions: Map<string | number, string>,
-      attrName: string,
-      id: string | number
-    ) => {
-      const script = json.props?.[attrName];
-      if (script) {
-        conditions.set(id, script);
-        otherAttributes.delete(attrName);
-      }
-    };
-
-    for (const key of getEnumKeys(PreCondition)) {
-      addCondition(config.preConditions, convertConditionToString(key), PreCondition[key]);
-    }
-
-    for (const key of getEnumKeys(PostCondition)) {
-      addCondition(config.postConditions, convertConditionToString(key), PostCondition[key]);
-    }
-
-    config.otherAttributes = otherAttributes;
+    applyConditions(json, config);
 
     //---------------------------------------------
 
     let newNode: TreeNode;
 
-    if (nodeType === NodeType.SubTree) {
+    if (convertNodeNameToNodeType(json.name) === NodeType.SubTree) {
       config.input = portRemap;
       newNode = this.factory.instantiateTreeNode(instanceName, NodeType[NodeType.SubTree], config);
       // a substitution rule may have replaced the SubTree with a different
@@ -629,52 +374,10 @@ export class Parser {
       subtreeNode?.setSubtreeId(typeId);
     } else {
       if (!manifest) {
-        throw new Error("Missing manifest. It shouldn't happen. Please report this issue");
+        fail(json, "Missing manifest. It shouldn't happen. Please report this issue");
       }
 
-      // Check that name in remapping can be found in the manifest
-      for (const key of portRemap.keys()) {
-        if (!manifest.ports.has(key)) {
-          throw new Error(`you tried to remap port [${key}] in node [${typeId} / ${instanceName}]`);
-        }
-      }
-
-      // Initialize the ports in the BB to set the type
-      for (const [portName, portInfo] of manifest.ports) {
-        if (!portRemap.has(portName)) continue;
-        const remappedPort = portRemap.get(portName)!;
-        const portKey = TreeNode.getRemappedKey(portName, remappedPort);
-        if (portKey !== undefined) {
-          const prevInfo = blackboard.portInfo(portKey);
-          // not found, insert for the first time.
-          if (!prevInfo) blackboard.createEntry(portKey, portInfo);
-        }
-      }
-
-      // Set the port direction in config
-      for (const remap of portRemap) {
-        const portName = remap[0];
-        if (manifest.ports.has(portName)) {
-          const { direction } = manifest.ports.get(portName)!;
-          if (direction !== PortDirection.OUTPUT) config.input.set(...remap);
-          if (direction !== PortDirection.INPUT) config.output.set(...remap);
-        }
-      }
-
-      // use default value if available for empty ports. Only inputs
-      for (const [portName, portInfo] of manifest.ports) {
-        const { direction, defaultValue, defaultValueString } = portInfo;
-
-        if (defaultValue !== undefined) {
-          if (direction !== PortDirection.OUTPUT && !config.input.has(portName)) {
-            config.input.set(portName, defaultValueString);
-          }
-
-          if (direction !== PortDirection.INPUT && !config.output.has(portName)) {
-            config.output.set(portName, defaultValueString);
-          }
-        }
-      }
+      applyManifestPorts(config, blackboard, manifest, portRemap);
 
       newNode = this.factory.instantiateTreeNode(instanceName, typeId, config);
     }
@@ -691,10 +394,124 @@ export class Parser {
     return newNode;
   }
 
+  /** The key the factory builds this element under. */
+  private resolveTypeId(json: TreeNodeObject): string {
+    const { name } = json;
+    const id = json.props?.ID;
+
+    if (convertNodeNameToNodeType(name) === NodeType.Undefined) {
+      // a node declared by its own element name, e.g. <MyCustomAction>
+      if (!this.factory.builders.has(name)) {
+        fail(json, `${name} is not a registered node`);
+      }
+      if (id) {
+        fail(json, `Attribute [ID] is not allowed in <${name}>`);
+      }
+      return name;
+    }
+
+    // a builtin type is declared by its tag and identified by its ID
+    if (!id) {
+      fail(json, `Attribute [ID] is mandatory in <${name}>`);
+    }
+    return id!;
+  }
+
   clear(): void {
     this.suffixCount = 0;
     this.openedDocuments.splice(0);
     this.treeRoots.clear();
+  }
+}
+
+/** Splits the attributes of an element into port remapping and the rest. */
+function readAttributes(
+  json: TreeNodeObject,
+  manifest: TreeNodeManifest | undefined
+): { portRemap: PortsRemapping; otherAttributes: NonPortAttributes } {
+  const portRemap: PortsRemapping = new Map();
+  const otherAttributes: NonPortAttributes = new Map();
+
+  for (const [portName, portValue] of Object.entries(
+    (json.props || {}) as Record<string, string>
+  )) {
+    if (isAllowedPortName(portName)) {
+      if (manifest && !manifest.ports.has(portName)) {
+        fail(
+          json,
+          `A port with name [${portName}] is found in the XML, but not in the providedPorts()`
+        );
+      }
+      portRemap.set(portName, portValue);
+    } else if (!isReservedAttribute(portName)) {
+      otherAttributes.set(portName, portValue);
+    }
+  }
+
+  return { portRemap, otherAttributes };
+}
+
+/** Moves the pre/post condition attributes out of the free-form attributes. */
+function applyConditions(json: TreeNodeObject, config: NodeConfig): void {
+  const add = (conditions: Map<string | number, string>, attrName: string, id: string | number) => {
+    const script = json.props?.[attrName];
+    if (script) {
+      conditions.set(id, script);
+      config.otherAttributes.delete(attrName);
+    }
+  };
+
+  for (const key of getEnumKeys(PreCondition)) {
+    add(config.preConditions, convertConditionToString(key), PreCondition[key]);
+  }
+  for (const key of getEnumKeys(PostCondition)) {
+    add(config.postConditions, convertConditionToString(key), PostCondition[key]);
+  }
+}
+
+/**
+ * Gives every remapped port a typed entry in the blackboard, points the
+ * manifest's directions at the remapping, and fills in the defaults for ports
+ * the XML left out.
+ */
+function applyManifestPorts(
+  config: NodeConfig,
+  blackboard: Blackboard,
+  manifest: TreeNodeManifest,
+  portRemap: PortsRemapping
+): void {
+  // Initialize the ports in the BB to set the type
+  for (const [portName, portInfo] of manifest.ports) {
+    if (!portRemap.has(portName)) continue;
+    const remappedPort = portRemap.get(portName)!;
+    const portKey = TreeNode.getRemappedKey(portName, remappedPort);
+    if (portKey !== undefined && !blackboard.portInfo(portKey)) {
+      // not found, insert for the first time.
+      blackboard.createEntry(portKey, portInfo);
+    }
+  }
+
+  // Set the port direction in config
+  for (const [portName, portValue] of portRemap) {
+    const portInfo = manifest.ports.get(portName);
+    if (!portInfo) continue;
+    const { direction } = portInfo;
+    if (direction !== PortDirection.OUTPUT) config.input.set(portName, portValue);
+    if (direction !== PortDirection.INPUT) config.output.set(portName, portValue);
+  }
+
+  // use default value if available for empty ports. Only inputs
+  for (const [portName, portInfo] of manifest.ports) {
+    const { direction, defaultValue, defaultValueString } = portInfo;
+
+    if (defaultValue === undefined) continue;
+
+    if (direction !== PortDirection.OUTPUT && !config.input.has(portName)) {
+      config.input.set(portName, defaultValueString);
+    }
+    if (direction !== PortDirection.INPUT && !config.output.has(portName)) {
+      config.output.set(portName, defaultValueString);
+    }
   }
 }
 
