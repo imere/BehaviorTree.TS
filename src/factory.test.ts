@@ -69,6 +69,23 @@ describe("BehaviorTreeFactory", () => {
     expect(() => factory.createTreeFromXML(xml)).not.toThrow();
   });
 
+  test("BehaviorTree.CPPIssue672_DeeplyNestedXmlIsRejected", () => {
+    // 400 nested Inverters would overflow the stack before the check existed
+    const depth = 400;
+    const open = "<Inverter>".repeat(depth);
+    const close = "</Inverter>".repeat(depth);
+    const xml = `
+      <root BTTS_format="4">
+        <BehaviorTree ID="MainTree">
+          ${open}${close}
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    expect(() => factory.createTreeFromXML(xml)).toThrow(/nesting depth/);
+  });
+
   test("WrongTreeName", () => {
     const xml = `
       <root BTTS_format="4">

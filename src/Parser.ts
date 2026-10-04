@@ -211,7 +211,14 @@ export class Parser {
     const behavior_tree_count = root.children.filter((o) => o.name === "BehaviorTree").length;
 
     // function to be called recursively
-    const recursiveStep = (node: TreeNodeObject) => {
+    const MAX_NESTING_DEPTH = 256;
+    const recursiveStep = (node: TreeNodeObject, depth = 0) => {
+      if (depth > MAX_NESTING_DEPTH) {
+        throw new Error(
+          `Maximum XML nesting depth exceeded (limit: ${MAX_NESTING_DEPTH}). ` +
+            `The XML is too deeply nested.`
+        );
+      }
       const { name } = node;
       if (name === "Decorator") {
         expect(node, 1, ["ID"]);
@@ -278,7 +285,7 @@ export class Parser {
 
       //recursion
       for (const child of node.children || []) {
-        recursiveStep(child);
+        recursiveStep(child, depth + 1);
       }
     };
 
