@@ -1,7 +1,7 @@
-import { SyncActionNode } from "./ActionNode";
-import { Blackboard } from "./Blackboard";
-import { TreeFactory } from "./TreeFactory";
-import { NodeConfig } from "./TreeNode";
+import { SyncActionNode } from "./ActionNode.js";
+import { Blackboard } from "./Blackboard.js";
+import { TreeFactory } from "./TreeFactory.js";
+import { NodeConfig } from "./TreeNode.js";
 import {
   ImplementPorts,
   NodeStatus,
@@ -9,9 +9,9 @@ import {
   PortList,
   createInputPort,
   createOutputPort,
-} from "./basic";
-import { SaySomething } from "./sample/DummyNodes";
-import { registerTestTick } from "./testing/helper";
+} from "./basic.js";
+import { SaySomething } from "./sample/DummyNodes.js";
+import { registerTestTick } from "./testing/helper.js";
 
 @ImplementPorts
 class CopyPorts extends SyncActionNode {
@@ -128,7 +128,7 @@ describe("Subtree", () => {
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
   });
 
-  test("BadRemapping", () => {
+  test("BadRemapping", async () => {
     const factory = new TreeFactory();
     factory.registerNodeType(SaySomething, SaySomething.name);
     factory.registerNodeType(CopyPorts, CopyPorts.name);
@@ -151,7 +151,7 @@ describe("Subtree", () => {
 
     factory.registerTreeFromXML(xml_text_bad_in);
     const tree_bad_in = factory.createTree("MainTree");
-    expect(tree_bad_in.tickWhileRunning()).rejects.toThrow();
+    await expect(tree_bad_in.tickWhileRunning()).rejects.toThrow();
 
     const xml_text_bad_out = `
     <root BTTS_format="4" >
@@ -171,10 +171,10 @@ describe("Subtree", () => {
 
     factory.registerTreeFromXML(xml_text_bad_out);
     const tree_bad_out = factory.createTree("MainTree");
-    expect(tree_bad_out.tickWhileRunning()).rejects.toThrow();
+    await expect(tree_bad_out.tickWhileRunning()).rejects.toThrow();
   });
 
-  test("BadRemapping", () => {
+  test("BadRemapping", async () => {
     const factory = new TreeFactory();
     factory.registerNodeType(SaySomething, SaySomething.name);
     factory.registerNodeType(CopyPorts, CopyPorts.name);
@@ -197,7 +197,7 @@ describe("Subtree", () => {
 
     factory.registerTreeFromXML(xml_text_bad_in);
     const tree_bad_in = factory.createTree("MainTree");
-    expect(tree_bad_in.tickWhileRunning()).rejects.toThrow();
+    await expect(tree_bad_in.tickWhileRunning()).rejects.toThrow();
 
     const xml_text_bad_out = `
     <root BTTS_format="4" >
@@ -217,7 +217,7 @@ describe("Subtree", () => {
 
     factory.registerTreeFromXML(xml_text_bad_out);
     const tree_bad_out = factory.createTree("MainTree");
-    expect(tree_bad_out.tickWhileRunning()).rejects.toThrow();
+    await expect(tree_bad_out.tickWhileRunning()).rejects.toThrow();
   });
 
   test("SubtreePlusA", async () => {
