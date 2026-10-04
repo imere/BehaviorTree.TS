@@ -622,8 +622,10 @@ export class Parser {
     if (nodeType === NodeType.SubTree) {
       config.input = portRemap;
       newNode = this.factory.instantiateTreeNode(instanceName, NodeType[NodeType.SubTree], config);
-      const subtreeNode = newNode as SubTreeNode;
-      subtreeNode.setSubtreeId(typeId);
+      // a substitution rule may have replaced the SubTree with a different
+      // node, in which case this is not a SubTreeNode at all
+      const subtreeNode = newNode instanceof SubTreeNode ? newNode : undefined;
+      subtreeNode?.setSubtreeId(typeId);
     } else {
       if (!manifest) {
         throw new Error("Missing manifest. It shouldn't happen. Please report this issue");

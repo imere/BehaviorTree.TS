@@ -49,3 +49,25 @@ describe("Substitution", () => {
     expect(rules.get("actionC")).toEqual("NotAConfig");
   });
 });
+
+describe("BehaviorTree.CPPIssue1083_SubstitutingASubTree", () => {
+  test("a substitution rule may replace a SubTree with a non-SubTree node", async () => {
+    const xml = `
+      <root BTTS_format="4" mainTreeToExecute="MainTree">
+        <BehaviorTree ID="MainTree">
+          <SubTree ID="SomeTree" name="mocked"/>
+        </BehaviorTree>
+        <BehaviorTree ID="SomeTree">
+          <AlwaysSuccess/>
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.substitutionRules.set("mocked", "AlwaysFailure");
+    const tree = factory.createTreeFromXML(xml);
+
+    // without the guard this reached setSubtreeId on a non-SubTree node
+    expect(await tree.tickExactlyOnce()).toBe(NodeStatus.FAILURE);
+  });
+});
