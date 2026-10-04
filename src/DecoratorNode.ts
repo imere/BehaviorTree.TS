@@ -55,9 +55,15 @@ export class SimpleDecoratorNode extends DecoratorNode {
 
   override executeTick(): NodeStatus {
     const status = super.executeTick();
-    const childStatus = this.child!.status;
-    if (childStatus === NodeStatus.SUCCESS || childStatus === NodeStatus.FAILURE) {
-      this.child!.resetStatus();
+    // Safety net for the decorators that don't reset a completed child.
+    // Skipped while RUNNING: an asynchronous child may complete right after
+    // tick() saw it RUNNING, and resetting it here would discard its result,
+    // i.e. execute the action twice.
+    if (status !== NodeStatus.RUNNING) {
+      const childStatus = this.child!.status;
+      if (childStatus === NodeStatus.SUCCESS || childStatus === NodeStatus.FAILURE) {
+        this.child!.resetStatus();
+      }
     }
     return status;
   }
