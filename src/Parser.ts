@@ -254,6 +254,9 @@ export class Parser {
             let asyncCount = 0;
             for (const { name: childName } of node.children || []) {
               const childType = registeredNodes.get(childName);
+              if (childType === undefined) {
+                throw new Error(`Unknown node type: ${childName}`);
+              }
               if (
                 childType === NodeType.Control &&
                 [
