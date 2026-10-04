@@ -220,44 +220,48 @@ export class Parser {
         );
       }
       const { name } = node;
-      if (name === "Decorator") {
-        expect(node, 1, ["ID"]);
-      } else if (name === "Action") {
-        expect(node, 0, ["ID"]);
-      } else if (name === "Condition") {
-        expect(node, 0, ["ID"]);
-      } else if (name === "Control") {
-        expect(node, Infinity, ["ID"]);
-      } else if (["Sequence", "Fallback"].includes(name)) {
-        expect(node, Infinity);
-      } else if (name === "SubTree") {
-        expect(node, 0, ["ID"]);
-        if (registeredNodes.has(node.props?.ID as string)) {
+      const id = node.props?.ID as string | undefined;
+
+      const isBuiltin = ["Decorator", "Action", "Condition", "Control", "SubTree"].includes(name);
+      if (isBuiltin && !id) {
+        throw new Error(`The tag <${name}> must have the attribute [ID]`);
+      }
+
+      if (name === "SubTree") {
+        expect(node, 0);
+        if (registeredNodes.has(id as string)) {
           throw new Error(
             "The attribute [ID] of tag <SubTree> must not use the name of a registered Node"
           );
         }
       } else if (name === "BehaviorTree") {
         expect(node, 1);
-        if (!node.props?.ID && behavior_tree_count > 1) {
+        if (!id && behavior_tree_count > 1) {
           throw new Error("The tag <BehaviorTree> must have the attribute [ID]");
         }
-        if (registeredNodes.has(node.props?.ID as string)) {
+        if (registeredNodes.has(id as string)) {
           throw new Error(
             "The attribute [ID] of tag <BehaviorTree> must not use the name of a registered Node"
           );
         }
-      } else {
-        const search = registeredNodes.get(name);
+      } else if (!["Sequence", "Fallback"].includes(name)) {
+        // builtin node types are looked up by their ID, everything else by the
+        // element name
+        const lookupName = isBuiltin ? (id as string) : name;
+        const search = registeredNodes.get(lookupName);
         if (search === undefined) {
-          throw new Error(`Node not recognized: ${name}`);
+          throw new Error(`Node not recognized: ${lookupName}`);
         }
 
         if (search === NodeType.Decorator) {
           expect(node, 1);
+        } else if (search === NodeType.Action || search === NodeType.Condition) {
+          expect(node, 0);
         } else if (search === NodeType.Control) {
           expect(node, Infinity);
-          if (name === "ReactiveSequence") {
+          // keyed off the registration, as upstream does, so
+          // <Control ID="ReactiveSequence"> is checked too
+          if (lookupName === "ReactiveSequence") {
             let asyncCount = 0;
             for (const { name: childName } of node.children || []) {
               const childType = registeredNodes.get(childName);

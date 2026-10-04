@@ -201,3 +201,35 @@ describe("BehaviorTreeReload", () => {
     }
   });
 });
+
+describe("BehaviorTree.CPPIssue1000_VerifyXML", () => {
+  function build(body: string) {
+    return `
+      <root BTTS_format="4">
+        <BehaviorTree ID="MainTree">
+          ${body}
+        </BehaviorTree>
+      </root>
+    `;
+  }
+
+  test("a builtin tag without ID is rejected", () => {
+    const factory = new TreeFactory();
+    // <Action> is looked up by its ID, so a missing ID cannot resolve
+    expect(() => factory.createTreeFromXML(build("<Action/>"))).toThrow(
+      /<Action> must have the attribute \[ID\]/
+    );
+  });
+
+  test("a builtin tag with an unknown ID reports the ID, not the tag", () => {
+    const factory = new TreeFactory();
+    expect(() => factory.createTreeFromXML(build('<Action ID="NoSuchNode"/>'))).toThrow(
+      /Node not recognized: NoSuchNode/
+    );
+  });
+
+  test("a registered ID is accepted for a builtin tag", () => {
+    const factory = new TreeFactory();
+    expect(() => factory.createTreeFromXML(build('<Action ID="AlwaysSuccess"/>'))).not.toThrow();
+  });
+});

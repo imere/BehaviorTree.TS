@@ -99,4 +99,31 @@ describe("Reactive", () => {
 
     expect(() => factory.createTreeFromXML(xml)).toThrow();
   });
+
+  test("TwoAsyncNodesInReactiveSequenceRegisteredViaControl", async () => {
+    // the check keys off the registration, not the element name, so wrapping
+    // the same node in <Control ID="ReactiveSequence"> must still be rejected
+    const xml = `
+      <root BTTS_format="4" >
+        <BehaviorTree ID="MainTree">
+          <Control ID="ReactiveSequence">
+            <AsyncSequence name="first">
+              <TestA/>
+              <TestB/>
+            </AsyncSequence>
+            <AsyncSequence name="second">
+              <TestC/>
+              <TestD/>
+            </AsyncSequence>
+          </Control>
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    const counters = Array.from<number>({ length: 4 });
+    registerTestTick(factory, "Test", counters);
+
+    expect(() => factory.createTreeFromXML(xml)).toThrow();
+  });
 });
