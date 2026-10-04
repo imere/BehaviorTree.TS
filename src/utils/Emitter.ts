@@ -1,4 +1,4 @@
-import { type Fn, type MaybePromise } from ".";
+import { type Fn, type MaybePromise } from "./index.js";
 
 export type TOnFilter<T = string> = T | null | undefined;
 
@@ -28,20 +28,19 @@ export class Emitter<Events extends Record<string, unknown[]>> {
     this.listener.get(ev)!.push(newCb);
 
     return () => {
-      this.off(ev, fn);
+      this.off(ev, newCb);
     };
   }
 
   off<K extends keyof Events>(ev: K, fn?: Listener<Events[K]>) {
     if (!this.listener.has(ev)) return;
-    if (!fn) this.listener.delete(ev);
-    else {
-      const fns = this.listener.get(ev)!;
-      fns.splice(
-        fns.findIndex((_) => fn === _),
-        1
-      );
+    if (!fn) {
+      this.listener.delete(ev);
+      return;
     }
+    const fns = this.listener.get(ev)!;
+    const idx = fns.findIndex((_) => fn === _);
+    if (idx !== -1) fns.splice(idx, 1);
   }
 
   async emit<K extends keyof Events>(ev: K, ...args: Events[K]) {
