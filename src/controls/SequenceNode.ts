@@ -1,6 +1,6 @@
 import { ControlNode } from "../ControlNode.js";
 import type { NodeConfig } from "../TreeNode.js";
-import { NodeStatus, type NodeUserStatus } from "../basic.js";
+import { NodeStatus, isStatusActive, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The SequenceNode is used to tick children in an ordered sequence.
@@ -30,7 +30,7 @@ export class SequenceNode extends ControlNode {
   }
 
   override tick(): NodeUserStatus {
-    if (this.status === NodeStatus.IDLE) this.skippedCount = 0;
+    if (!isStatusActive(this.status)) this.skippedCount = 0;
 
     this.setStatus(NodeStatus.RUNNING);
 
@@ -77,17 +77,20 @@ export class SequenceNode extends ControlNode {
     }
 
     // The entire while loop completed. This means that all the children returned FAILURE.
+    const allChildrenSkipped = this.skippedCount === this.childrenCount();
     if (this.currentChildIdx === this.childrenCount()) {
       this.resetChildren();
       this.currentChildIdx = 0;
+      this.skippedCount = 0;
     }
 
     // Skip if ALL the nodes have been skipped
-    return this.skippedCount === this.childrenCount() ? NodeStatus.SKIPPED : NodeStatus.SUCCESS;
+    return allChildrenSkipped ? NodeStatus.SKIPPED : NodeStatus.SUCCESS;
   }
 
   override halt(): void {
     this.currentChildIdx = 0;
+    this.skippedCount = 0;
     super.halt();
   }
 }
