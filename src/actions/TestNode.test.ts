@@ -1,3 +1,4 @@
+import { Blackboard } from "../Blackboard.js";
 import { NodeConfig } from "../TreeNode.js";
 import { NodeStatus } from "../basic.js";
 import { TestNode, TestNodeConfig } from "./TestNode.js";
@@ -18,7 +19,7 @@ const ALL_SCRIPTS = {
   post_script: "from_post = 1",
 };
 
-describe("TestNodeExecutorWiring", () => {
+describe("BehaviorTree.CPPIssue1169_TestNodeExecutorWiring", () => {
   test("SUCCESS runs success_script and post_script, not failure_script", () => {
     const { node, blackboard } = build({
       return_status: "SUCCESS",
@@ -72,5 +73,50 @@ describe("TestNodeExecutorWiring", () => {
     const { node } = build({ return_status: "SUCCESS" });
 
     expect(node.executeTick()).toBe(NodeStatus.SUCCESS);
+  });
+
+  test("BehaviorTree.CPPIssue1169_ReturnStatusScriptOverrides", () => {
+    const { node } = build({
+      return_status: "SUCCESS",
+      return_status_script: "should_fail ? 'FAILURE' : 'SUCCESS'",
+    });
+
+    const config = node as unknown as { config: { blackboard: Blackboard } };
+    config.config.blackboard.set("should_fail", true);
+
+    expect(node.executeTick()).toBe(NodeStatus.FAILURE);
+  });
+
+  test("BehaviorTree.CPPIssue1169_ReturnStatusScriptSeesStatusNames", () => {
+    const { node } = build({
+      return_status: "SUCCESS",
+      return_status_script: "verdict",
+    });
+
+    const bb = (node as unknown as { config: { blackboard: Blackboard } }).config.blackboard;
+    bb.set("verdict", "SKIPPED");
+
+    expect(node.executeTick()).toBe(NodeStatus.SKIPPED);
+  });
+
+  test("BehaviorTree.CPPIssue1169_ReturnStatusScriptRejectsIdle", () => {
+    const { node } = build({ return_status: "SUCCESS", return_status_script: "'IDLE'" });
+
+    expect(() => node.executeTick()).toThrow(/IDLE/);
+  });
+
+  test("BehaviorTree.CPPIssue1169_ReturnStatusScriptDrivesHooks", () => {
+    const { node, blackboard } = build({
+      return_status: "SUCCESS",
+      return_status_script: "'FAILURE'",
+      success_script: "ran_success = 1",
+      failure_script: "ran_failure = 1",
+      post_script: "ran_post = 1",
+    });
+
+    expect(node.executeTick()).toBe(NodeStatus.FAILURE);
+    expect(blackboard.get("ran_failure")).toBe(1);
+    expect(blackboard.get("ran_post")).toBe(1);
+    expect(blackboard.get("ran_success")).toBeUndefined();
   });
 });
