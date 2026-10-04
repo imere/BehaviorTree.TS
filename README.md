@@ -16,12 +16,29 @@ git clone https://github.com/imere/BehaviorTree.TS.git
 
 #### Method A for TypeScript
 
-import from `src`
+import from `src` (explicit `.js` specifiers — the package is ESM)
+
+```ts
+import { TreeFactory, NodeStatus } from "./src/index.js";
+```
 
 #### Method B
 
-1. run `yarn build`
-2. import from `dist`
+1. run `pnpm build`
+2. import from `build`:
+
+| output       | format     | use it via                  |
+| ------------ | ---------- | --------------------------- |
+| `build/lib`  | ESM + types | `import` / bundlers         |
+| `build/dist` | UMD        | `<script>`, `require`       |
+
+```ts
+import { TreeFactory } from "behavior-tree-ts"; // build/lib/index.js
+```
+
+```js
+const { TreeFactory } = require("behavior-tree-ts"); // build/dist/index.cjs
+```
 
 ## Some differences
 
