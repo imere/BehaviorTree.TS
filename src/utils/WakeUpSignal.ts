@@ -10,8 +10,15 @@ export class WakeUpSignal extends Emitter<{ signal: [] }> {
   async waitFor(ms: number): Promise<boolean> {
     let off: Fn | undefined;
     const ret = await new Promise<boolean>((resolve) => {
-      off = this.once("signal", () => resolve(this.ready));
+      // a signal that landed before we started waiting would otherwise be lost,
+      // and we would sit out the whole timeout
+      if (this.ready) {
+        resolve(true);
+        return;
+      }
+      off = this.once("signal", () => resolve(true));
       setTimeout(() => {
+        off?.();
         resolve(this.ready);
       }, ms);
     });
