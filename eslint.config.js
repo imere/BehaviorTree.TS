@@ -1,7 +1,6 @@
 import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import pluginPrettierRecommended from "eslint-plugin-prettier/recommended";
-import globals from "globals";
 import ts from "typescript-eslint";
 
 const prettierOptions = {
@@ -19,10 +18,6 @@ export default defineConfig(
   globalIgnores(["**/node_modules", "**/build", "**/dist", ".rollup.cache"]),
   {
     languageOptions: {
-      globals: {
-        ...globals.node,
-        ...globals.browser,
-      },
       ecmaVersion: "latest",
       sourceType: "module",
     },

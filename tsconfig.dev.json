@@ -7,8 +7,10 @@
     "tsBuildInfoFile": "./build/tsconfig.dev.tsbuildinfo"
   },
   "include": [
-    "./src",
-    "./types"
+    "./src"
+  ],
+  "files": [
+    "./types/globals.d.ts"
   ],
   "exclude": [
     "**/*.test.*"
