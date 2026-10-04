@@ -8,7 +8,7 @@
       "path": "./tsconfig.dev.json"
     },
     {
-      "path": "./tsconfig.jest.json"
+      "path": "./tsconfig.test.json"
     }
   ]
 }

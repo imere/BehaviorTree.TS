@@ -15,11 +15,10 @@
     "moduleResolution": "NodeNext",
     "resolveJsonModule": false,
     "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "noImplicitOverride": true,
-    "outDir": "./dist",
+    "outDir": "./build/lib",
     "allowJs": true
   }
 }
