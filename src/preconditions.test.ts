@@ -1,7 +1,7 @@
-import { StatefulActionNode, SyncActionNode } from "./ActionNode";
-import { TreeFactory } from "./TreeFactory";
-import { NodeStatus, PortList, createOutputPort, type NodeUserStatus } from "./basic";
-import { registerTestTick } from "./testing/helper";
+import { StatefulActionNode, SyncActionNode } from "./ActionNode.js";
+import { TreeFactory } from "./TreeFactory.js";
+import { NodeStatus, PortList, createOutputPort, type NodeUserStatus } from "./basic.js";
+import { registerTestTick } from "./testing/helper.js";
 
 describe("PreconditionsDecorator", () => {
   test("Integers", async () => {
@@ -232,6 +232,34 @@ describe("Preconditions", () => {
     // skipIf should be ignored, because KeepRunning is RUNNING and not IDLE
     tree.rootBlackboard!.set("check", false);
     expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+  });
+
+  test("BehaviorTree.CPPIssue904_ConditionEvaluatedOnce", async () => {
+    const xml = `
+    <root BTTS_format="4">
+      <BehaviorTree ID="MainTree">
+        <Precondition if="(ticks = ticks + 1) > 0">
+          <KeepRunning/>
+        </Precondition>
+      </BehaviorTree>
+    </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.registerNodeType(KeepRunning, KeepRunning.name, new PortList());
+    const tree = factory.createTreeFromXML(xml);
+
+    tree.rootBlackboard!.set("ticks", 0);
+
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+    expect(tree.rootBlackboard!.get("ticks")).toBe(1);
+
+    // the child is still RUNNING, so the condition must not be re-evaluated
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+    expect(tree.rootBlackboard!.get("ticks")).toBe(1);
+
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+    expect(tree.rootBlackboard!.get("ticks")).toBe(1);
   });
 
   test("Remapping", async () => {

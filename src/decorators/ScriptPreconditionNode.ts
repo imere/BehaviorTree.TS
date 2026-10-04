@@ -1,5 +1,5 @@
-import { DecoratorNode } from "../DecoratorNode";
-import type { NodeConfig } from "../TreeNode";
+import { DecoratorNode } from "../DecoratorNode.js";
+import type { NodeConfig } from "../TreeNode.js";
 import {
   ImplementPorts,
   NodeStatus,
@@ -7,8 +7,8 @@ import {
   createInputPort,
   isStatusCompleted,
   type NodeUserStatus,
-} from "../basic";
-import { createRuntimeExecutor, supportScriptExpression } from "../scripting/parser";
+} from "../basic.js";
+import { createRuntimeExecutor, supportScriptExpression } from "../scripting/parser.js";
 
 @ImplementPorts
 export class PreconditionNode extends DecoratorNode {
@@ -27,6 +27,8 @@ export class PreconditionNode extends DecoratorNode {
 
   private _executor?: () => unknown;
 
+  private _childrenRunning = false;
+
   constructor(name: string, config: NodeConfig) {
     super(name, config);
   }
@@ -36,13 +38,18 @@ export class PreconditionNode extends DecoratorNode {
 
     const elseReturn = this.getInputOrThrow("else");
 
-    if (this._executor!()) {
-      const childStatus = this.child!.executeTick();
-      if (isStatusCompleted(childStatus)) this.resetChild();
-      return childStatus as NodeUserStatus;
-    } else {
+    const tickChildren = this._childrenRunning || (this._childrenRunning = !!this._executor!());
+
+    if (!tickChildren) {
       return NodeStatus[elseReturn];
     }
+
+    const childStatus = this.child!.executeTick();
+    if (isStatusCompleted(childStatus)) {
+      this.resetChild();
+      this._childrenRunning = false;
+    }
+    return childStatus as NodeUserStatus;
   }
 
   private loadExecutor(): void {
