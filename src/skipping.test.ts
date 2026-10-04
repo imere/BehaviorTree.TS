@@ -1,8 +1,8 @@
-import { Blackboard } from "./Blackboard";
-import { TreeFactory } from "./TreeFactory";
-import { NodeStatus, isStatusCompleted } from "./basic";
-import { AsyncActionTest } from "./testing/ActionTestNode";
-import { registerTestTick } from "./testing/helper";
+import { Blackboard } from "./Blackboard.js";
+import { TreeFactory } from "./TreeFactory.js";
+import { NodeStatus, isStatusCompleted } from "./basic.js";
+import { AsyncActionTest } from "./testing/ActionTestNode.js";
+import { registerTestTick } from "./testing/helper.js";
 
 describe("SkippingLogic", () => {
   test("Sequence", async () => {

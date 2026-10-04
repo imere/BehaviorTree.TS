@@ -1,13 +1,13 @@
-import { SyncActionNode } from "../ActionNode";
-import { type NodeConfig } from "../TreeNode";
+import { SyncActionNode } from "../ActionNode.js";
+import { type NodeConfig } from "../TreeNode.js";
 import {
   ImplementPorts,
   NodeStatus,
   PortList,
   createInputPort,
   type NodeUserStatus,
-} from "../basic";
-import { createRuntimeExecutor } from "../scripting/parser";
+} from "../basic.js";
+import { createRuntimeExecutor } from "../scripting/parser.js";
 
 @ImplementPorts
 export class ScriptNode extends SyncActionNode {

@@ -1,5 +1,5 @@
-import { TreeFactory } from "./TreeFactory";
-import { NodeStatus } from "./basic";
+import { TreeFactory } from "./TreeFactory.js";
+import { NodeStatus } from "./basic.js";
 
 describe("PostConditions", () => {
   test("BasicTest", async () => {

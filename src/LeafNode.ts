@@ -1,5 +1,5 @@
-import { TreeNode, type NodeConfig } from "./TreeNode";
-import type { NodeType, NodeUserStatus } from "./basic";
+import { TreeNode, type NodeConfig } from "./TreeNode.js";
+import type { NodeType, NodeUserStatus } from "./basic.js";
 
 export abstract class LeafNode extends TreeNode {
   abstract override type: NodeType;

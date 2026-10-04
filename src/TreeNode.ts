@@ -1,4 +1,4 @@
-import { Blackboard } from "./Blackboard";
+import { Blackboard } from "./Blackboard.js";
 import {
   NodeStatus,
   NodeType,
@@ -9,13 +9,13 @@ import {
   type Metadata,
   type NodeUserStatus,
   type PortList,
-} from "./basic";
-import type { EnumsTable, Environment, ScriptFunction } from "./scripting/parser";
-import type { ConstructorType } from "./utils";
-import { getEnumKeys } from "./utils";
-import { Emitter } from "./utils/Emitter";
-import { WakeUpSignal } from "./utils/WakeUpSignal";
-import { now } from "./utils/date-time";
+} from "./basic.js";
+import type { EnumsTable, Environment, ScriptFunction } from "./scripting/parser.js";
+import type { ConstructorType } from "./utils/index.js";
+import { getEnumKeys } from "./utils/index.js";
+import { Emitter } from "./utils/Emitter.js";
+import { WakeUpSignal } from "./utils/WakeUpSignal.js";
+import { now } from "./utils/date-time.js";
 
 /** This information is used mostly by the Parser. */
 export class TreeNodeManifest {
@@ -136,7 +136,7 @@ export class TreeNode extends Emitter<{
   static instantiate<
     T extends TreeNode,
     C extends ConstructorType<T>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
+    A extends (ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]),
   >(Ctor: C, name: string, config: NodeConfig, ...args: A) {
     return new Ctor(name, config, ...args);
   }

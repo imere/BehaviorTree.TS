@@ -1,5 +1,5 @@
-import { TreeNode } from "./TreeNode";
-import { NodeStatus, NodeType } from "./basic";
+import { TreeNode } from "./TreeNode.js";
+import { NodeStatus, NodeType } from "./basic.js";
 
 export abstract class ControlNode extends TreeNode {
   override type: NodeType = NodeType.Control;

@@ -1,5 +1,5 @@
-import { PortDirection, PortInfo, Timestamp } from "./basic";
-import { now } from "./utils/date-time";
+import { PortDirection, PortInfo, Timestamp } from "./basic.js";
+import { now } from "./utils/date-time.js";
 
 export function isPrivateKey(key: PropertyKey): key is `_${string}` {
   return Boolean(key) && String(key).startsWith("_");

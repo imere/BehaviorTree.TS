@@ -1,6 +1,6 @@
-import { ControlNode } from "../ControlNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { ControlNode } from "../ControlNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief IfThenElseNode must have exactly 2 or 3 children. This node is NOT reactive.

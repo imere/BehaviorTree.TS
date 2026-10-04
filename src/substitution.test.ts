@@ -1,6 +1,6 @@
-import { TreeFactory } from "./TreeFactory";
-import { TestNodeConfig } from "./actions/TestNode";
-import { NodeStatus } from "./basic";
+import { TreeFactory } from "./TreeFactory.js";
+import { TestNodeConfig } from "./actions/TestNode.js";
+import { NodeStatus } from "./basic.js";
 
 const json = `
 {

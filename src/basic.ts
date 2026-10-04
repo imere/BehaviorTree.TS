@@ -1,11 +1,11 @@
-import { PostCondPairs, PreCondPairs, TreeNode } from "./TreeNode";
+import { PostCondPairs, PreCondPairs, TreeNode } from "./TreeNode.js";
 import {
   Primitive,
   matchPattern,
   type AbstractConstructorType,
   type ConstructorType,
-} from "./utils";
-import { now } from "./utils/date-time";
+} from "./utils/index.js";
+import { now } from "./utils/date-time.js";
 
 export enum NodeType {
   Undefined,

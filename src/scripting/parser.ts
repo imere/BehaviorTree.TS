@@ -1,6 +1,6 @@
-import { type Blackboard } from "../Blackboard";
-import { Runtime } from "../Runtime";
-import { createEmptyObject } from "../utils";
+import { type Blackboard } from "../Blackboard.js";
+import { Runtime } from "../Runtime.js";
+import { createEmptyObject } from "../utils/index.js";
 
 export type EnumsTable = Map<PropertyKey, any>;
 

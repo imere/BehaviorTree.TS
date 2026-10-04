@@ -1,23 +1,23 @@
-import { SyncActionNode } from "../ActionNode";
-import { Blackboard } from "../Blackboard";
-import { Runtime } from "../Runtime";
-import { TreeFactory } from "../TreeFactory";
-import { TreeNode } from "../TreeNode";
+import { SyncActionNode } from "../ActionNode.js";
+import { Blackboard } from "../Blackboard.js";
+import { Runtime } from "../Runtime.js";
+import { TreeFactory } from "../TreeFactory.js";
+import { TreeNode } from "../TreeNode.js";
 import {
   NodeStatus,
   PortList,
   createInputPort,
   createOutputPort,
   type NodeUserStatus,
-} from "../basic";
-import { SaySomething } from "../sample/DummyNodes";
-import { registerTestTick } from "../testing/helper";
+} from "../basic.js";
+import { SaySomething } from "../sample/DummyNodes.js";
+import { registerTestTick } from "../testing/helper.js";
 import {
   Environment,
   createRuntimeExecutor,
   createTreeExecutionContext,
   supportScriptExpression,
-} from "./parser";
+} from "./parser.js";
 
 describe("ParserTest", () => {
   test("Equations", () => {

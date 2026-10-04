@@ -1,6 +1,6 @@
-import { SyncActionNode } from "./ActionNode";
-import { TreeFactory } from "./TreeFactory";
-import { NodeStatus, PortList, type NodeUserStatus } from "./basic";
+import { SyncActionNode } from "./ActionNode.js";
+import { TreeFactory } from "./TreeFactory.js";
+import { NodeStatus, PortList, type NodeUserStatus } from "./basic.js";
 
 class FastAction extends SyncActionNode {
   protected override tick(): NodeUserStatus {

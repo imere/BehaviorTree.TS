@@ -1,7 +1,7 @@
-import { NodeConfig } from "./TreeNode";
-import { NodeStatus } from "./basic";
-import { TimeoutNode } from "./decorators/TimeoutNode";
-import { AsyncActionTest } from "./testing/ActionTestNode";
+import { NodeConfig } from "./TreeNode.js";
+import { NodeStatus } from "./basic.js";
+import { TimeoutNode } from "./decorators/TimeoutNode.js";
+import { AsyncActionTest } from "./testing/ActionTestNode.js";
 
 const sleepFor = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

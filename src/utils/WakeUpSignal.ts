@@ -1,5 +1,5 @@
-import { type Fn } from ".";
-import { Emitter } from "./Emitter";
+import { type Fn } from "./index.js";
+import { Emitter } from "./Emitter.js";
 
 export class WakeUpSignal extends Emitter<{ signal: [] }> {
   mutex = `${Math.random().toString(16).slice(2, 10)}`;

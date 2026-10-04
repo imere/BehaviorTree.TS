@@ -1,6 +1,6 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { NodeConfig, TreeNode } from "../TreeNode";
-import { NodeStatus, NodeUserStatus, PortList, createInputPort } from "../basic";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { NodeConfig, TreeNode } from "../TreeNode.js";
+import { NodeStatus, NodeUserStatus, PortList, createInputPort } from "../basic.js";
 
 /**
  * @brief The SkipUnlessUpdated checks the Timestamp in an entry

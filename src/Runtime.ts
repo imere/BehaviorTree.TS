@@ -1,8 +1,7 @@
 export type RuntimeFunction<R = any> = (context: object) => R;
 
 type ArgItem =
-  | [name: string, expression?: undefined]
-  | [name: string, expression: string, constant?: boolean];
+  [name: string, expression?: undefined] | [name: string, expression: string, constant?: boolean];
 
 export function attachGlobals(target: object, extra?: [name: string, value: unknown][]) {
   const HOST = [

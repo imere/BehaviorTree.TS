@@ -1,5 +1,5 @@
-import { TreeFactory } from "../TreeFactory";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { TreeFactory } from "../TreeFactory.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 function testTick(tickCounter: () => number): NodeUserStatus {
   tickCounter();

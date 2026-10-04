@@ -1,11 +1,11 @@
-import { ActionNodeBase } from "./ActionNode";
-import { ConditionNode } from "./ConditionNode";
-import { ControlNode } from "./ControlNode";
-import { DecoratorNode } from "./DecoratorNode";
-import { TreeNode } from "./TreeNode";
-import { NodeType } from "./basic";
-import { SubTreeNode } from "./decorators/SubtreeNode";
-import { type AbstractConstructorType, type ConstructorType } from "./utils";
+import { ActionNodeBase } from "./ActionNode.js";
+import { ConditionNode } from "./ConditionNode.js";
+import { ControlNode } from "./ControlNode.js";
+import { DecoratorNode } from "./DecoratorNode.js";
+import { TreeNode } from "./TreeNode.js";
+import { NodeType } from "./basic.js";
+import { SubTreeNode } from "./decorators/SubtreeNode.js";
+import { type AbstractConstructorType, type ConstructorType } from "./utils/index.js";
 
 export function applyRecursiveVisitor(
   node: TreeNode | undefined,

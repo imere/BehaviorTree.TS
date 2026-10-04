@@ -1,5 +1,5 @@
-import { ControlNode } from "../ControlNode";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { ControlNode } from "../ControlNode.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The ReactiveFallback is similar to a ParallelNode.

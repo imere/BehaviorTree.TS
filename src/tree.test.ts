@@ -1,10 +1,10 @@
-import { printTreeRecursively } from "./Tree";
-import { NodeConfig } from "./TreeNode";
-import { NodeStatus } from "./basic";
-import { FallbackNode } from "./controls/FallbackNode";
-import { SequenceNode } from "./controls/SequenceNode";
-import { AsyncActionTest } from "./testing/ActionTestNode";
-import { ConditionTestNode } from "./testing/ConditionTestNode";
+import { printTreeRecursively } from "./Tree.js";
+import { NodeConfig } from "./TreeNode.js";
+import { NodeStatus } from "./basic.js";
+import { FallbackNode } from "./controls/FallbackNode.js";
+import { SequenceNode } from "./controls/SequenceNode.js";
+import { AsyncActionTest } from "./testing/ActionTestNode.js";
+import { ConditionTestNode } from "./testing/ConditionTestNode.js";
 
 describe("BehaviorTreeTest", () => {
   let root: SequenceNode;

@@ -1,8 +1,8 @@
-import { TreeFactory } from "../TreeFactory";
-import { type PreTickCallback } from "../TreeNode";
-import { AlwaysFailureNode } from "../actions/AlwaysFailureNode";
-import { NodeStatus, isStatusCompleted } from "../basic";
-import { registerTestTick } from "../testing/helper";
+import { TreeFactory } from "../TreeFactory.js";
+import { type PreTickCallback } from "../TreeNode.js";
+import { AlwaysFailureNode } from "../actions/AlwaysFailureNode.js";
+import { NodeStatus, isStatusCompleted } from "../basic.js";
+import { registerTestTick } from "../testing/helper.js";
 
 describe("Reactive", () => {
   test("RunningChildren", async () => {

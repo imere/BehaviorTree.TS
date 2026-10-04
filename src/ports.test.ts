@@ -1,6 +1,6 @@
-import { SyncActionNode } from "./ActionNode";
-import { TreeFactory } from "./TreeFactory";
-import type { Converter, NodeConfig } from "./TreeNode";
+import { SyncActionNode } from "./ActionNode.js";
+import { TreeFactory } from "./TreeFactory.js";
+import type { Converter, NodeConfig } from "./TreeNode.js";
 import {
   ImplementPorts,
   NodeStatus,
@@ -8,7 +8,7 @@ import {
   PortList,
   createInputPort,
   type NodeUserStatus,
-} from "./basic";
+} from "./basic.js";
 
 describe("PortTest", () => {
   @ImplementPorts

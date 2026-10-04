@@ -1,13 +1,13 @@
-import { SyncActionNode } from "./ActionNode";
-import { ConditionNode } from "./ConditionNode";
-import { TreeFactory } from "./TreeFactory";
+import { SyncActionNode } from "./ActionNode.js";
+import { ConditionNode } from "./ConditionNode.js";
+import { TreeFactory } from "./TreeFactory.js";
 import {
   ImplementPorts,
   NodeStatus,
   PortList,
   createInputPort,
   type NodeUserStatus,
-} from "./basic";
+} from "./basic.js";
 
 enum Color {
   Red = 0,

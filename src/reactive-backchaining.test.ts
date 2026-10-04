@@ -1,8 +1,8 @@
-import { StatefulActionNode } from "./ActionNode";
-import { ConditionNode } from "./ConditionNode";
-import { TreeFactory } from "./TreeFactory";
-import { NodeConfig } from "./TreeNode";
-import { NodeStatus, NodeUserStatus, PortList } from "./basic";
+import { StatefulActionNode } from "./ActionNode.js";
+import { ConditionNode } from "./ConditionNode.js";
+import { TreeFactory } from "./TreeFactory.js";
+import { NodeConfig } from "./TreeNode.js";
+import { NodeStatus, NodeUserStatus, PortList } from "./basic.js";
 
 class SimpleCondition extends ConditionNode {
   static providedPorts(): PortList {

@@ -1,6 +1,6 @@
-import { SyncActionNode } from "../ActionNode";
-import type { NodeConfig } from "../TreeNode";
-import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic";
+import { SyncActionNode } from "../ActionNode.js";
+import type { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic.js";
 
 export class UnsetBlackboardNode extends SyncActionNode {
   static providedPorts() {

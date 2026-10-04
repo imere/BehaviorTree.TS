@@ -1,13 +1,13 @@
-import { SyncActionNode } from "../ActionNode";
-import { convertFromString } from "../Parser";
-import { TreeNode, type NodeConfig } from "../TreeNode";
+import { SyncActionNode } from "../ActionNode.js";
+import { convertFromString } from "../Parser.js";
+import { TreeNode, type NodeConfig } from "../TreeNode.js";
 import {
   NodeStatus,
   PortList,
   createBidiPort,
   createInputPort,
   type NodeUserStatus,
-} from "../basic";
+} from "../basic.js";
 
 export class SetBlackboardNode extends SyncActionNode {
   constructor(name: string, config: NodeConfig) {

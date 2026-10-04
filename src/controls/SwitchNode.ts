@@ -1,14 +1,14 @@
-import { ControlNode } from "../ControlNode";
-import { convertFromString } from "../Parser";
-import type { NodeConfig } from "../TreeNode";
+import { ControlNode } from "../ControlNode.js";
+import { convertFromString } from "../Parser.js";
+import type { NodeConfig } from "../TreeNode.js";
 import {
   NodeStatus,
   PortList,
   createInputPort,
   type CtorWithPorts,
   type NodeUserStatus,
-} from "../basic";
-import type { ConstructorType } from "../utils";
+} from "../basic.js";
+import type { ConstructorType } from "../utils/index.js";
 
 declare class ISwitchNode extends ControlNode {
   static providedPorts(): PortList;

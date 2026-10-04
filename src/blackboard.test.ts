@@ -1,8 +1,8 @@
-import { SyncActionNode } from "./ActionNode";
-import { Blackboard } from "./Blackboard";
-import { ConditionNode } from "./ConditionNode";
-import { TreeFactory, blackboardBackup, blackboardRestore } from "./TreeFactory";
-import { NodeConfig, assignDefaultRemapping } from "./TreeNode";
+import { SyncActionNode } from "./ActionNode.js";
+import { Blackboard } from "./Blackboard.js";
+import { ConditionNode } from "./ConditionNode.js";
+import { TreeFactory, blackboardBackup, blackboardRestore } from "./TreeFactory.js";
+import { NodeConfig, assignDefaultRemapping } from "./TreeNode.js";
 import {
   ImplementPorts,
   NodeStatus,
@@ -10,9 +10,9 @@ import {
   createInputPort,
   createOutputPort,
   type NodeUserStatus,
-} from "./basic";
-import { SaySomething } from "./sample/DummyNodes";
-import { now } from "./utils/date-time";
+} from "./basic.js";
+import { SaySomething } from "./sample/DummyNodes.js";
+import { now } from "./utils/date-time.js";
 
 @ImplementPorts
 class BB_TestNode extends SyncActionNode {

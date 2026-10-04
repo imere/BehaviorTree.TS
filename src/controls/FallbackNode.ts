@@ -1,6 +1,6 @@
-import { ControlNode } from "../ControlNode";
-import type { NodeConfig } from "../TreeNode";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { ControlNode } from "../ControlNode.js";
+import type { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The FallbackNode is used to try different strategies,
@@ -33,7 +33,7 @@ export class FallbackNode extends ControlNode {
 
     this.setStatus(NodeStatus.RUNNING);
 
-    for (const count = this.childrenCount(); this.currentChildIdx < count; ) {
+    for (const count = this.childrenCount(); this.currentChildIdx < count;) {
       const currentChild = this.children[this.currentChildIdx];
 
       const oldStatus = currentChild.status;

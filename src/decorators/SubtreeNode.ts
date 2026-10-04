@@ -1,5 +1,5 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { type NodeConfig } from "../TreeNode";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { type NodeConfig } from "../TreeNode.js";
 import {
   NodeStatus,
   NodeType,
@@ -8,7 +8,7 @@ import {
   createPortInfo,
   isStatusCompleted,
   type NodeUserStatus,
-} from "../basic";
+} from "../basic.js";
 
 /**
  * @brief The SubTreeNode is a way to wrap an entire Subtree,

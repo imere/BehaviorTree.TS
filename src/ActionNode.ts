@@ -1,6 +1,6 @@
-import { LeafNode } from "./LeafNode";
-import type { NodeConfig } from "./TreeNode";
-import { NodeStatus, NodeType, type NodeUserStatus } from "./basic";
+import { LeafNode } from "./LeafNode.js";
+import type { NodeConfig } from "./TreeNode.js";
+import { NodeStatus, NodeType, type NodeUserStatus } from "./basic.js";
 
 /**
  * @brief The ActionNodeBase is the base class to use to create any kind of action.

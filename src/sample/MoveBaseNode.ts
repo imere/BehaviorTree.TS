@@ -1,11 +1,11 @@
-import { StatefulActionNode } from "../ActionNode";
+import { StatefulActionNode } from "../ActionNode.js";
 import {
   ImplementPorts,
   NodeStatus,
   PortList,
   createInputPort,
   type NodeUserStatus,
-} from "../basic";
+} from "../basic.js";
 
 class Pose2D {
   constructor(

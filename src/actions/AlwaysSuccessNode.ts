@@ -1,6 +1,6 @@
-import { SyncActionNode } from "../ActionNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { SyncActionNode } from "../ActionNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 /**
  * Simple actions that always returns SUCCESS.

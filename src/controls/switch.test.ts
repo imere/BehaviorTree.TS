@@ -1,8 +1,8 @@
-import { Blackboard } from "../Blackboard";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus } from "../basic";
-import { AsyncActionTest } from "../testing/ActionTestNode";
-import { createSwitchNode, type Switch } from "./SwitchNode";
+import { Blackboard } from "../Blackboard.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus } from "../basic.js";
+import { AsyncActionTest } from "../testing/ActionTestNode.js";
+import { createSwitchNode, type Switch } from "./SwitchNode.js";
 
 const sleepFor = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

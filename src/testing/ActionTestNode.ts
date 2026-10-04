@@ -1,6 +1,6 @@
-import { StatefulActionNode, SyncActionNode } from "../ActionNode";
-import { NodeConfig } from "../TreeNode";
-import { ImplementPorts, NodeStatus, PortList, type NodeUserStatus } from "../basic";
+import { StatefulActionNode, SyncActionNode } from "../ActionNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { ImplementPorts, NodeStatus, PortList, type NodeUserStatus } from "../basic.js";
 
 export class SyncActionTest extends SyncActionNode {
   constructor(name: string, config = new NodeConfig()) {

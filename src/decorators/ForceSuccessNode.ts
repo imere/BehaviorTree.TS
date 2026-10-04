@@ -1,6 +1,6 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, isStatusCompleted, type NodeUserStatus } from "../basic";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, isStatusCompleted, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The ForceSuccessNode returns always SUCCESS or RUNNING.

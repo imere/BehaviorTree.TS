@@ -1,11 +1,11 @@
-import { SyncActionNode } from "../ActionNode";
+import { SyncActionNode } from "../ActionNode.js";
 import {
   ImplementPorts,
   NodeStatus,
   PortList,
   createInputPort,
   type NodeUserStatus,
-} from "../basic";
+} from "../basic.js";
 
 @ImplementPorts
 export class SaySomething extends SyncActionNode {

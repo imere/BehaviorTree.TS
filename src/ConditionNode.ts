@@ -1,6 +1,6 @@
-import { ControlNode } from "./ControlNode";
-import type { NodeConfig } from "./TreeNode";
-import { NodeType, type NodeUserStatus } from "./basic";
+import { ControlNode } from "./ControlNode.js";
+import type { NodeConfig } from "./TreeNode.js";
+import { NodeType, type NodeUserStatus } from "./basic.js";
 
 export abstract class ConditionNode extends ControlNode {
   override type: NodeType = NodeType.Condition;

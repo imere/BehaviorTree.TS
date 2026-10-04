@@ -1,6 +1,6 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The InverterNode returns SUCCESS if child fails
