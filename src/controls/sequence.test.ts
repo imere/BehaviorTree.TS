@@ -1,9 +1,9 @@
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus } from "../basic";
-import { AsyncActionTest, SyncActionTest } from "../testing/ActionTestNode";
-import { ConditionTestNode } from "../testing/ConditionTestNode";
-import { ReactiveSequence } from "./ReactiveSequence";
-import { SequenceNode } from "./SequenceNode";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus } from "../basic.js";
+import { AsyncActionTest, SyncActionTest } from "../testing/ActionTestNode.js";
+import { ConditionTestNode } from "../testing/ConditionTestNode.js";
+import { ReactiveSequence } from "./ReactiveSequence.js";
+import { SequenceNode } from "./SequenceNode.js";
 
 describe("SimpleSequenceTest", () => {
   let root: SequenceNode, condition: ConditionTestNode, action: AsyncActionTest;
@@ -24,9 +24,8 @@ describe("SimpleSequenceTest", () => {
 
   test("ConditionTurnToFalse", () => {
     condition.setExpectedResult(NodeStatus.FAILURE);
-    let state = root.executeTick();
-
-    state = root.executeTick();
+    root.executeTick();
+    const state = root.executeTick();
     expect(state).toBe(NodeStatus.FAILURE);
     expect(condition.status).toBe(NodeStatus.IDLE);
     expect(action.status).toBe(NodeStatus.IDLE);
@@ -63,11 +62,11 @@ describe("ComplexSequenceTest", () => {
   });
 
   test("ComplexSequenceConditions1ToFalse", () => {
-    let state = root.executeTick();
+    root.executeTick();
 
     condition_1.setExpectedResult(NodeStatus.FAILURE);
 
-    state = root.executeTick();
+    const state = root.executeTick();
 
     expect(state).toBe(NodeStatus.FAILURE);
     expect(seq_conditions.status).toBe(NodeStatus.IDLE);
@@ -77,11 +76,11 @@ describe("ComplexSequenceTest", () => {
   });
 
   test("ComplexSequenceConditions2ToFalse", () => {
-    let state = root.executeTick();
+    root.executeTick();
 
     condition_2.setExpectedResult(NodeStatus.FAILURE);
 
-    state = root.executeTick();
+    const state = root.executeTick();
 
     expect(state).toBe(NodeStatus.FAILURE);
     expect(seq_conditions.status).toBe(NodeStatus.IDLE);
@@ -174,7 +173,9 @@ describe("ComplexSequence2ActionsTest", () => {
   });
 
   test("ConditionsTrue", async () => {
-    let state = root.executeTick();
+    let state: NodeStatus;
+
+    root.executeTick();
 
     state = root.executeTick();
 

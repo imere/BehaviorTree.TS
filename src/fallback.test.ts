@@ -1,9 +1,9 @@
-import { NodeConfig } from "./TreeNode";
-import { NodeStatus } from "./basic";
-import { FallbackNode } from "./controls/FallbackNode";
-import { ReactiveFallback } from "./controls/ReactiveFallback";
-import { AsyncActionTest } from "./testing/ActionTestNode";
-import { ConditionTestNode } from "./testing/ConditionTestNode";
+import { NodeConfig } from "./TreeNode.js";
+import { NodeStatus } from "./basic.js";
+import { FallbackNode } from "./controls/FallbackNode.js";
+import { ReactiveFallback } from "./controls/ReactiveFallback.js";
+import { AsyncActionTest } from "./testing/ActionTestNode.js";
+import { ConditionTestNode } from "./testing/ConditionTestNode.js";
 
 describe("SimpleFallbackTest", () => {
   let root: FallbackNode;
@@ -30,7 +30,7 @@ describe("SimpleFallbackTest", () => {
   });
 
   test("ConditionChangeWhileRunning", () => {
-    let state = NodeStatus.IDLE;
+    let state: NodeStatus;
 
     condition.setExpectedResult(NodeStatus.FAILURE);
     state = root.executeTick();
@@ -220,10 +220,10 @@ describe("ComplexFallbackWithMemoryTest", () => {
   test("Conditions1ToTrue", () => {
     condition_1.setExpectedResult(NodeStatus.FAILURE);
     condition_2.setExpectedResult(NodeStatus.FAILURE);
-    let state = root.executeTick();
+    root.executeTick();
 
     condition_1.setExpectedResult(NodeStatus.SUCCESS);
-    state = root.executeTick();
+    const state = root.executeTick();
 
     expect(state).toBe(NodeStatus.RUNNING);
     expect(fal_conditions.status).toBe(NodeStatus.FAILURE);
@@ -237,10 +237,10 @@ describe("ComplexFallbackWithMemoryTest", () => {
   test("Conditions2ToTrue", () => {
     condition_1.setExpectedResult(NodeStatus.FAILURE);
     condition_2.setExpectedResult(NodeStatus.FAILURE);
-    let state = root.executeTick();
+    root.executeTick();
 
     condition_2.setExpectedResult(NodeStatus.SUCCESS);
-    state = root.executeTick();
+    const state = root.executeTick();
 
     expect(state).toBe(NodeStatus.RUNNING);
     expect(fal_conditions.status).toBe(NodeStatus.FAILURE);
@@ -257,11 +257,11 @@ describe("ComplexFallbackWithMemoryTest", () => {
     condition_1.setExpectedResult(NodeStatus.FAILURE);
     condition_2.setExpectedResult(NodeStatus.FAILURE);
 
-    let state = root.executeTick();
+    root.executeTick();
 
-    state = root.executeTick();
+    root.executeTick();
     await new Promise((resolve) => setTimeout(resolve, 500));
-    state = root.executeTick();
+    const state = root.executeTick();
 
     expect(state).toBe(NodeStatus.RUNNING);
     expect(fal_conditions.status).toBe(NodeStatus.FAILURE);
