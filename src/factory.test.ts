@@ -39,6 +39,36 @@ describe("BehaviorTreeFactory", () => {
     expect(() => new Parser(factory).loadFromXML(xml)).toThrow(/Node not recognized/);
   });
 
+  test("BehaviorTree.CPPIssue1193_SubstitutionMayNotChangeTheNodeType", () => {
+    // the XML is validated against the original type, so swapping a leaf for a
+    // decorator leaves the node without the child the XML never supplied
+    const xml = `
+      <root BTTS_format="4">
+        <BehaviorTree ID="MainTree">
+          <AlwaysSuccess name="target"/>
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.substitutionRules.set("target", "Inverter");
+    expect(() => factory.createTreeFromXML(xml)).toThrow(/Substitution of node/);
+  });
+
+  test("BehaviorTree.CPPIssue1193_SubstitutionMayReplaceALeafWithALeaf", () => {
+    const xml = `
+      <root BTTS_format="4">
+        <BehaviorTree ID="MainTree">
+          <AlwaysSuccess name="target"/>
+        </BehaviorTree>
+      </root>
+    `;
+
+    const factory = new TreeFactory();
+    factory.substitutionRules.set("target", "AlwaysFailure");
+    expect(() => factory.createTreeFromXML(xml)).not.toThrow();
+  });
+
   test("WrongTreeName", () => {
     const xml = `
       <root BTTS_format="4">
