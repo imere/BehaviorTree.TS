@@ -1,6 +1,8 @@
+import { StatefulActionNode } from "./ActionNode.js";
+import { NodeConfig } from "./TreeNode.js";
 import { Parser } from "./Parser.js";
 import { TreeFactory } from "./TreeFactory.js";
-import { Metadata, NodeStatus } from "./basic.js";
+import { Metadata, NodeStatus, PortList, type NodeUserStatus } from "./basic.js";
 import { SaySomething } from "./sample/DummyNodes.js";
 
 function makeTestMetadata(): Metadata {
@@ -84,6 +86,62 @@ describe("BehaviorTreeFactory", () => {
 
     const factory = new TreeFactory();
     expect(() => factory.createTreeFromXML(xml)).toThrow(/nesting depth/);
+  });
+
+  test("BehaviorTree.CPPIssue837_RegisteringWithExtraArgs", () => {
+    class NarrowCtor extends StatefulActionNode {
+      static providedPorts(): PortList {
+        return new PortList();
+      }
+      constructor(name: string) {
+        super(name, new NodeConfig());
+      }
+      override onStart(): NodeUserStatus {
+        return NodeStatus.SUCCESS;
+      }
+      override onRunning(): NodeUserStatus {
+        return NodeStatus.SUCCESS;
+      }
+      override onHalted(): void {}
+    }
+
+    const factory = new TreeFactory();
+    // TypeScript rejects the mismatched extra argument at compile time, which
+    // is the better outcome; the runtime guard is for plain-JS callers
+    const register = factory.registerNodeType as (
+      ctor: unknown,
+      id: string,
+      ...args: unknown[]
+    ) => void;
+    expect(() => register(NarrowCtor, "NarrowCtor", new PortList(), 42)).toThrow(
+      /NOT compatible with the arguments provided/
+    );
+  });
+
+  test("BehaviorTree.CPPIssue837_RegisteringWithoutExtraArgs", () => {
+    class NarrowCtor2 extends StatefulActionNode {
+      static providedPorts(): PortList {
+        return new PortList();
+      }
+      constructor(name: string) {
+        super(name, new NodeConfig());
+      }
+      override onStart(): NodeUserStatus {
+        return NodeStatus.SUCCESS;
+      }
+      override onRunning(): NodeUserStatus {
+        return NodeStatus.SUCCESS;
+      }
+      override onHalted(): void {}
+    }
+
+    const factory = new TreeFactory();
+    const register = factory.registerNodeType as (
+      ctor: unknown,
+      id: string,
+      ...args: unknown[]
+    ) => void;
+    expect(() => register(NarrowCtor2, "NarrowCtor2")).toThrow(/MUST add a constructor/);
   });
 
   test("WrongTreeName", () => {
