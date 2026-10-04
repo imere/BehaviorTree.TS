@@ -1,7 +1,7 @@
 import { StatefulActionNode } from "./ActionNode.js";
 import { NodeConfig } from "./TreeNode.js";
 import { Parser } from "./Parser.js";
-import { TreeFactory } from "./TreeFactory.js";
+import { blackboardRestore, TreeFactory } from "./TreeFactory.js";
 import { Metadata, NodeStatus, PortList, type NodeUserStatus } from "./basic.js";
 import { SaySomething } from "./sample/DummyNodes.js";
 
@@ -231,5 +231,27 @@ describe("BehaviorTree.CPPIssue1000_VerifyXML", () => {
   test("a registered ID is accepted for a builtin tag", () => {
     const factory = new TreeFactory();
     expect(() => factory.createTreeFromXML(build('<Action ID="AlwaysSuccess"/>'))).not.toThrow();
+  });
+});
+
+describe("BehaviorTree.CPPIssue1182_BlackboardRestore", () => {
+  test("a mismatched backup is rejected with both sizes named", () => {
+    const factory = new TreeFactory();
+    factory.registerTreeFromXML(`
+      <root BTTS_format="4" mainTreeToExecute="MainTree">
+        <BehaviorTree ID="MainTree">
+          <SubTree ID="Sub" name="sub"/>
+        </BehaviorTree>
+        <BehaviorTree ID="Sub">
+          <AlwaysSuccess/>
+        </BehaviorTree>
+      </root>
+    `);
+    const tree = factory.createTree("MainTree");
+
+    // one blackboard short of the two subtrees
+    expect(() => blackboardRestore([], tree)).toThrow(
+      /backup contains 0 blackboards, but the tree has 2 subtrees/
+    );
   });
 });
