@@ -5,14 +5,14 @@ import {
   NodeType,
   PortDirection,
   type PortList,
-} from "./basic";
-import { Blackboard } from "./Blackboard";
-import { ControlNode } from "./ControlNode";
-import { DecoratorNode } from "./DecoratorNode";
-import { SubTreeNode } from "./decorators/SubtreeNode";
-import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports";
-import { type EnumsTable } from "./scripting/parser";
-import { Subtree, Tree, type TreeFactory } from "./TreeFactory";
+} from "./basic.js";
+import { Blackboard } from "./Blackboard.js";
+import { ControlNode } from "./ControlNode.js";
+import { DecoratorNode } from "./DecoratorNode.js";
+import { SubTreeNode } from "./decorators/SubtreeNode.js";
+import { ElementType, parseDocument, type Element } from "./modules/htmlparser2/exports.js";
+import { type EnumsTable } from "./scripting/parser.js";
+import { Subtree, Tree, type TreeFactory } from "./TreeFactory.js";
 import {
   convertToString as convertConditionToString,
   NodeConfig,
@@ -22,8 +22,8 @@ import {
   TreeNode,
   TreeNodeManifest,
   type NonPortAttributes,
-} from "./TreeNode";
-import { getEnumKeys } from "./utils";
+} from "./TreeNode.js";
+import { getEnumKeys } from "./utils/index.js";
 
 export const convertFromString = (scriptingEnums: EnumsTable, value: string | undefined) => {
   if (value === undefined) return;
@@ -98,7 +98,7 @@ export function parseXML(xml: string): TreeObject {
 
   function withoutSpecialTextChildren(element: Element): Element[] {
     return (element.children || []).filter((child) => {
-      return ![ElementType.CDATA, ElementType.Comment].includes(child.type);
+      return child.type !== ElementType.CDATA && child.type !== ElementType.Comment;
     });
   }
 }
@@ -167,7 +167,7 @@ export class Parser {
 
     this.loadSubtreeModel(json);
 
-    for (let i = 0, node: TreeNodeObject = json.children[i]; (node = json.children[i]); i++) {
+    for (let i = 0, node: TreeNodeObject; (node = json.children[i]); i++) {
       const treeName = node.props?.ID || `Tree_${this.suffixCount++}`;
       this.treeRoots.set(treeName, node);
     }
@@ -559,7 +559,7 @@ export class Parser {
 
     //---------------------------------------------
 
-    let newNode: TreeNode = new TreeNode(instanceName, config);
+    let newNode: TreeNode;
 
     if (nodeType === NodeType.SubTree) {
       config.input = portRemap;
