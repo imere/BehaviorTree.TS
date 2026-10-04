@@ -1,67 +1,80 @@
-import { SimpleActionNode, SimpleAsyncActionNode } from "./ActionNode";
-import { Blackboard } from "./Blackboard";
-import { SimpleConditionNode } from "./ConditionNode";
-import { SimpleDecoratorNode } from "./DecoratorNode";
-import { Parser, type TreeObject } from "./Parser";
-import { applyRecursiveVisitor, getType } from "./Tree";
+import { SimpleActionNode, SimpleAsyncActionNode } from "./ActionNode.js";
+import { Blackboard } from "./Blackboard.js";
+import { SimpleConditionNode } from "./ConditionNode.js";
+import { warn } from "./Logger.js";
+import { SimpleDecoratorNode } from "./DecoratorNode.js";
+import { Parser, type TreeObject } from "./Parser.js";
+import { fail } from "./xml/XmlError.js";
+import { applyRecursiveVisitor, getType } from "./Tree.js";
 import {
   NodeConfig,
   TreeNode,
   TreeNodeManifest,
   type PostCondition,
   type PreCondition,
-} from "./TreeNode";
-import { AlwaysFailureNode } from "./actions/AlwaysFailureNode";
-import { AlwaysSuccessNode } from "./actions/AlwaysSuccessNode";
-import { ScriptNode } from "./actions/ScriptNode";
-import { SetBlackboardNode } from "./actions/SetBlackboardNode";
-import { SleepNode } from "./actions/SleepNode";
-import { TestNode, TestNodeConfig, type ITestNodeConfig } from "./actions/TestNode";
-import { UnsetBlackboardNode } from "./actions/UnsetBlackboardNode";
+} from "./TreeNode.js";
+import { AlwaysFailureNode } from "./actions/AlwaysFailureNode.js";
+import { AlwaysSuccessNode } from "./actions/AlwaysSuccessNode.js";
+import { ScriptNode } from "./actions/ScriptNode.js";
+import { ScriptConditionNode } from "./actions/ScriptConditionNode.js";
+import { SetBlackboardNode } from "./actions/SetBlackboardNode.js";
+import { SleepNode } from "./actions/SleepNode.js";
+import { TestNode, TestNodeConfig, type ITestNodeConfig } from "./actions/TestNode.js";
+import { UnsetBlackboardNode } from "./actions/UnsetBlackboardNode.js";
 import {
   Metadata,
   NodeStatus,
+  NodeType,
   PortList,
   getProvidedPorts,
   hasProvidedPorts,
   isStatusCompleted,
   type CtorWithMetadata,
   type CtorWithPorts,
-} from "./basic";
-import { FallbackNode } from "./controls/FallbackNode";
-import { IfThenElseNode } from "./controls/IfThenElseNode";
-import { ParallelAllNode } from "./controls/ParallelAllNode";
-import { ReactiveFallback } from "./controls/ReactiveFallback";
-import { ReactiveSequence } from "./controls/ReactiveSequence";
-import { SequenceNode } from "./controls/SequenceNode";
-import { createSwitchNode } from "./controls/SwitchNode";
-import { DelayNode } from "./decorators/DelayNode";
-import { ForceFailureNode } from "./decorators/ForceFailureNode";
-import { ForceSuccessNode } from "./decorators/ForceSuccessNode";
-import { InverterNode } from "./decorators/InverterNode";
-import { RunOnceNode } from "./decorators/RunOnceNode";
-import { PreconditionNode } from "./decorators/ScriptPreconditionNode";
-import { SkipUnlessUpdated } from "./decorators/SkipUnlessUpdated";
-import { SubTreeNode } from "./decorators/SubtreeNode";
-import { TimeoutNode } from "./decorators/TimeoutNode";
-import { WaitValueUpdate } from "./decorators/WaitUpdate";
+} from "./basic.js";
+import { FallbackNode } from "./controls/FallbackNode.js";
+import { IfThenElseNode } from "./controls/IfThenElseNode.js";
+import { ParallelAllNode } from "./controls/ParallelAllNode.js";
+import { ParallelNode } from "./controls/ParallelNode.js";
+import { TryCatchNode } from "./controls/TryCatchNode.js";
+import { WhileDoElseNode } from "./controls/WhileDoElseNode.js";
+import { ReactiveFallback } from "./controls/ReactiveFallback.js";
+import { ReactiveSequence } from "./controls/ReactiveSequence.js";
+import { SequenceNode } from "./controls/SequenceNode.js";
+import { SequenceWithMemory } from "./controls/SequenceWithMemoryNode.js";
+import { createSwitchNode } from "./controls/SwitchNode.js";
+import { DelayNode } from "./decorators/DelayNode.js";
+import { ForceFailureNode } from "./decorators/ForceFailureNode.js";
+import { ForceSuccessNode } from "./decorators/ForceSuccessNode.js";
+import { InverterNode } from "./decorators/InverterNode.js";
+import { KeepRunningUntilFailureNode } from "./decorators/KeepRunningUntilFailureNode.js";
+import { LoopNode } from "./decorators/LoopNode.js";
+import { RepeatNode } from "./decorators/RepeatNode.js";
+import { RetryNode } from "./decorators/RetryNode.js";
+import { RunOnceNode } from "./decorators/RunOnceNode.js";
+import { PreconditionNode } from "./decorators/ScriptPreconditionNode.js";
+import { SkipUnlessUpdated, WaitValueUpdate } from "./decorators/UpdatedDecorator.js";
+import { EntryUpdatedAction } from "./actions/UpdatedAction.js";
+import { SubTreeNode } from "./decorators/SubtreeNode.js";
+import { TimeoutNode } from "./decorators/TimeoutNode.js";
+
 import {
   createRuntimeExecutor,
   supportScriptExpression,
   type EnumsTable,
   type Environment,
   type ScriptFunction,
-} from "./scripting/parser";
-import type { ConstructorType } from "./utils";
-import { getEnumKeys } from "./utils";
-import { WakeUpSignal } from "./utils/WakeUpSignal";
+} from "./scripting/parser.js";
+import type { ConstructorType } from "./utils/index.js";
+import { getEnumKeys } from "./utils/index.js";
+import { WakeUpSignal } from "./utils/WakeUpSignal.js";
 
 export type NodeBuilder = (...args: [name: string, config: NodeConfig]) => TreeNode;
 
 export function createBuilder<
   T extends TreeNode,
   C extends ConstructorType<T>,
-  A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
+  A extends (ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]),
 >(Ctor: C, ...args: A): NodeBuilder {
   return function build(name: string, config: NodeConfig): TreeNode {
     return TreeNode.instantiate(Ctor, name, config, ...args);
@@ -104,13 +117,27 @@ export class TreeFactory {
     this.registerNodeType(FallbackNode, "AsyncFallback", new PortList(), true);
     this.registerNodeType(SequenceNode, "Sequence", new PortList());
     this.registerNodeType(SequenceNode, "AsyncSequence", new PortList(), true);
+    this.registerNodeType(SequenceWithMemory, "SequenceWithMemory", new PortList());
 
     this.registerNodeType(ParallelAllNode, "ParallelAll");
+    this.registerNodeType(ParallelNode, "Parallel");
     this.registerNodeType(ReactiveSequence, "ReactiveSequence", new PortList());
     this.registerNodeType(ReactiveFallback, "ReactiveFallback", new PortList());
     this.registerNodeType(IfThenElseNode, "IfThenElse", new PortList());
+    this.registerNodeType(WhileDoElseNode, "WhileDoElse", new PortList());
+    this.registerNodeType(TryCatchNode, "TryCatch");
+    this.registerNodeType(KeepRunningUntilFailureNode, "KeepRunningUntilFailure", new PortList());
 
     this.registerNodeType(InverterNode, "Inverter", new PortList());
+    this.registerNodeType(RetryNode, "RetryUntilSuccessful");
+    this.registerNodeType(LoopNode, "Loop");
+    // upstream registers four instantiations of a templated LoopNode; this port
+    // has a single untyped implementation, so they are aliases of it
+    this.registerNodeType(LoopNode, "LoopInt");
+    this.registerNodeType(LoopNode, "LoopBool");
+    this.registerNodeType(LoopNode, "LoopDouble");
+    this.registerNodeType(LoopNode, "LoopString");
+    this.registerNodeType(RepeatNode, "Repeat");
 
     this.registerNodeType(TimeoutNode, "Timeout");
     this.registerNodeType(DelayNode, "Delay");
@@ -121,6 +148,7 @@ export class TreeFactory {
 
     this.registerNodeType(AlwaysSuccessNode, "AlwaysSuccess", new PortList());
     this.registerNodeType(AlwaysFailureNode, "AlwaysFailure", new PortList());
+    this.registerNodeType(ScriptConditionNode, "ScriptCondition");
     this.registerNodeType(ScriptNode, "Script");
     this.registerNodeType(SetBlackboardNode, "SetBlackboard");
     this.registerNodeType(SleepNode, "Sleep");
@@ -136,6 +164,7 @@ export class TreeFactory {
     this.registerNodeType(createSwitchNode(5), "Switch5");
     this.registerNodeType(createSwitchNode(6), "Switch6");
 
+    this.registerNodeType(EntryUpdatedAction, "WasEntryUpdated");
     this.registerNodeType(SkipUnlessUpdated, "SkipUnlessUpdated");
     this.registerNodeType(WaitValueUpdate, "WaitValueUpdate");
 
@@ -226,17 +255,17 @@ export class TreeFactory {
   registerNodeType<
     T extends TreeNode,
     C extends ConstructorType<T> & Required<CtorWithPorts<T>>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
+    A extends (ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]),
   >(Ctor: C, id: string, ...args: A);
   registerNodeType<
     T extends TreeNode,
     C extends ConstructorType<T>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
+    A extends (ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]),
   >(Ctor: C, id: string, ports: PortList, ...args: A);
   registerNodeType<
     T extends TreeNode,
     C extends ConstructorType<T> & CtorWithPorts<T>,
-    A extends ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[],
+    A extends (ConstructorParameters<C> extends [string, NodeConfig, ...infer P] ? P : never[]),
   >(Ctor: C, id: string, ...args: A) {
     let ports = args[0];
     if (ports instanceof PortList) {
@@ -250,6 +279,15 @@ export class TreeFactory {
       }
     }
     if (Ctor.length && Ctor.length < 2) {
+      // extra arguments were passed, so the constructor most likely takes
+      // different types than the ones supplied
+      if (args.length > 0) {
+        throw new Error(
+          `[${Ctor.name}]: the constructor is NOT compatible with the arguments provided. ` +
+            `Verify that the types of the extra arguments passed to registerNodeType ` +
+            `match the constructor signature: (string, NodeConfig, ...)`
+        );
+      }
       throw new Error(
         `[${Ctor.name}]: you MUST add a constructor with signature: (string, NodeConfig)`
       );
@@ -287,7 +325,7 @@ export class TreeFactory {
           if (this.builders.has(substitutedId)) {
             node = this.builders.get(substitutedId)!(name, config);
           } else {
-            throw new Error(`Substituted Node ID [${substitutedId}] not found`);
+            fail(config, `Substituted Node ID [${substitutedId}] not found`);
           }
           substituted = true;
           break;
@@ -304,9 +342,32 @@ export class TreeFactory {
 
     if (!substituted) {
       if (!this.builders.has(id)) {
-        throw new Error(`TreeFactory: ID [${id}] not registered`);
+        fail(config, `TreeFactory: ID [${id}] not registered`);
       }
       node = this.builders.get(id)!(name, config);
+    }
+
+    if (substituted) {
+      // A substitution rule must not turn a node into a structurally
+      // incompatible type. The XML was validated (children count, mandatory
+      // ID) against the original node type, so replacing a leaf with a SubTree,
+      // Decorator or Control leaves a node whose child or "ID" attribute the
+      // XML never supplied. Allow same-type swaps and swaps to a leaf, which
+      // covers the common "replace with a mock action" case.
+      const originalType = this.manifests.get(id)!.type;
+      const newType = node.type;
+      if (
+        newType !== originalType &&
+        newType !== NodeType.Action &&
+        newType !== NodeType.Condition
+      ) {
+        fail(
+          config,
+          `Substitution of node [${name}] of type [${NodeType[originalType]}] with a node ` +
+            `of type [${NodeType[newType]}] is not allowed: a substitution may only keep ` +
+            `the same type or replace the node with a leaf (Action/Condition)`
+        );
+      }
     }
 
     node.registrationId = id;
@@ -337,7 +398,7 @@ export class TreeFactory {
 
   createTreeFromXML(xml: string, blackboard = Blackboard.create()): Tree {
     if (this.registeredTrees().length) {
-      console.warn(
+      warn(
         [
           "WARNING: You executed BehaviorTreeFactory::createTreeFromText ",
           "after registerBehaviorTreeFrom[File/Text].\n",
@@ -518,6 +579,9 @@ export class Tree {
     applyRecursiveVisitor(this.rootNode, (node) => node.haltNode());
 
     root.resetStatus();
+
+    // interrupt the sleep of tickWhileRunning(), if it is waiting
+    this.wakeUp?.emitSignal();
   }
 
   tickExactlyOnce(): Promise<NodeStatus> {
@@ -553,6 +617,11 @@ export class Tree {
 
     if (!root) throw new Error("Empty Tree");
 
+    // haltTree() resets the root to IDLE. If that happens while the last tick
+    // returned RUNNING we must not tick again, because that would restart the
+    // tree.
+    const halted = () => status === NodeStatus.RUNNING && root.status === NodeStatus.IDLE;
+
     // Inner loop. The previous tick might have triggered the wake-up
     // in this case, unless TickOption::EXACTLY_ONCE, we tick again
     while (
@@ -566,13 +635,24 @@ export class Tree {
         status === NodeStatus.RUNNING &&
         (await this.wakeUp!.waitFor(0))
       ) {
+        // haltTree() can land while we are waiting: the condition above was
+        // evaluated before the await, so re-check before ticking again
+        if (halted()) break;
         status = root.executeTick();
+      }
+
+      if (halted()) {
+        return NodeStatus.IDLE;
       }
 
       if (isStatusCompleted(status)) root.resetStatus();
 
       if (status === NodeStatus.RUNNING) {
         await this.sleep(sleepMs);
+      }
+
+      if (halted()) {
+        return NodeStatus.IDLE;
       }
     }
 
@@ -582,7 +662,10 @@ export class Tree {
 
 export function blackboardRestore(backup: Blackboard[], tree: Tree): void {
   if (backup.length !== tree.subtrees.length) {
-    throw new Error("assert(backup.size() == tree.subtrees.size())");
+    throw new Error(
+      `BlackboardRestore: the backup contains ${backup.length} blackboards, ` +
+        `but the tree has ${tree.subtrees.length} subtrees`
+    );
   }
   for (let i = 0; i < tree.subtrees.length; i++) {
     backup[i].cloneInto(tree.subtrees[i].blackboard);

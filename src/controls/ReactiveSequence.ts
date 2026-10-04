@@ -1,5 +1,5 @@
-import { ControlNode } from "../ControlNode";
-import { NodeStatus, type NodeUserStatus } from "../basic";
+import { ControlNode } from "../ControlNode.js";
+import { NodeStatus, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The ReactiveSequence is similar to a ParallelNode.
@@ -16,18 +16,18 @@ import { NodeStatus, type NodeUserStatus } from "../basic";
  *
  */
 export class ReactiveSequence extends ControlNode {
-  private runningChild = -1;
+  private _runningChild = -1;
 
-  private static throwIfMultipleRunning = false;
+  private static _throwIfMultipleRunning = false;
 
   private static enableException(enable: boolean): void {
-    ReactiveSequence.throwIfMultipleRunning = enable;
+    ReactiveSequence._throwIfMultipleRunning = enable;
   }
 
   override tick(): NodeUserStatus {
     let allSkipped = true;
 
-    if (this.status === NodeStatus.IDLE) this.runningChild = -1;
+    if (this.status === NodeStatus.IDLE) this._runningChild = -1;
 
     this.setStatus(NodeStatus.RUNNING);
 
@@ -48,9 +48,9 @@ export class ReactiveSequence extends ControlNode {
           for (let i = 0; i < childrenCount; i++) {
             if (i !== index) this.haltChild(i);
           }
-          if (this.runningChild === -1) {
-            this.runningChild = index;
-          } else if (ReactiveSequence.throwIfMultipleRunning && this.runningChild !== index) {
+          if (this._runningChild === -1) {
+            this._runningChild = index;
+          } else if (ReactiveSequence._throwIfMultipleRunning && this._runningChild !== index) {
             throw new Error(
               "[ReactiveSequence]: only a single child can return RUNNING. This throw can be disabled with ReactiveSequence::enableException(false)"
             );
@@ -83,7 +83,7 @@ export class ReactiveSequence extends ControlNode {
   }
 
   override halt(): void {
-    this.runningChild = -1;
+    this._runningChild = -1;
     super.halt();
   }
 }

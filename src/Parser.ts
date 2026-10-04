@@ -221,7 +221,7 @@ export class Parser {
         expect(node, 0, ["ID"]);
       } else if (name === "Control") {
         expect(node, Infinity, ["ID"]);
-      } else if (["Sequence", "SequenceStar", "Fallback"].includes(name)) {
+      } else if (["Sequence", "Fallback"].includes(name)) {
         expect(node, Infinity);
       } else if (name === "SubTree") {
         expect(node, 0, ["ID"]);

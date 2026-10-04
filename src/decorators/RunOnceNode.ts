@@ -1,11 +1,17 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, NodeUserStatus, PortList, createInputPort, isStatusCompleted } from "../basic";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import {
+  NodeStatus,
+  NodeUserStatus,
+  PortList,
+  createInputPort,
+  isStatusCompleted,
+} from "../basic.js";
 
 export class RunOnceNode extends DecoratorNode {
-  private alreadyTicked = false;
+  private _alreadyTicked = false;
 
-  private returnedStatus = NodeStatus.IDLE;
+  private _returnedStatus = NodeStatus.IDLE;
 
   constructor(name: string, config: NodeConfig) {
     super(name, config);
@@ -15,7 +21,7 @@ export class RunOnceNode extends DecoratorNode {
   static providedPorts(): PortList {
     return new PortList([
       createInputPort(
-        "thenSkip",
+        "then_skip",
         "If true, skip after the first execution, otherwise return the same NodeStatus returned once bu the child.",
         "true"
       ),
@@ -24,11 +30,11 @@ export class RunOnceNode extends DecoratorNode {
 
   protected override tick(): NodeUserStatus {
     let skip = true;
-    const value = this.getInput("thenSkip", (_) => JSON.parse(_));
+    const value = this.getInput("then_skip", (_) => JSON.parse(_));
     if (value !== undefined) skip = value;
 
-    if (this.alreadyTicked) {
-      return skip ? NodeStatus.SKIPPED : (this.returnedStatus as NodeUserStatus);
+    if (this._alreadyTicked) {
+      return skip ? NodeStatus.SKIPPED : (this._returnedStatus as NodeUserStatus);
     }
 
     this.setStatus(NodeStatus.RUNNING);
@@ -36,8 +42,8 @@ export class RunOnceNode extends DecoratorNode {
     const status = this.child!.executeTick();
 
     if (isStatusCompleted(status)) {
-      this.alreadyTicked = true;
-      this.returnedStatus = status;
+      this._alreadyTicked = true;
+      this._returnedStatus = status;
       this.resetChild();
     }
 

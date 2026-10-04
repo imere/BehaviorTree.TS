@@ -1,6 +1,6 @@
-import { ControlNode } from "../ControlNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic";
+import { ControlNode } from "../ControlNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic.js";
 
 /**
  * @brief The ParallelAllNode execute all its children
@@ -18,25 +18,25 @@ import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../b
 export class ParallelAllNode extends ControlNode {
   constructor(name: string, config: NodeConfig) {
     super(name, config);
-    this._failureThreshold = 1;
+    this.__failureThreshold = 1;
   }
 
   static providedPorts(): PortList {
     return new PortList([
       createInputPort(
-        "maxFailures",
+        "max_failures",
         "If the number of children returning FAILURE exceeds this value,  ParallelAll returns FAILURE",
         1
       ),
     ]);
   }
 
-  private readonly completed = new Set<number>();
+  private readonly _completed = new Set<number>();
 
-  private failureCount = 0;
+  private _failureCount = 0;
 
   protected override tick(): NodeUserStatus {
-    const maxFailures = this.getInput("maxFailures", Number);
+    const maxFailures = this.getInput("max_failures", Number);
 
     if (maxFailures === undefined || isNaN(maxFailures)) {
       throw new Error("Missing parameter [max_failures] in ParallelNode");
@@ -59,18 +59,18 @@ export class ParallelAllNode extends ControlNode {
     for (let i = 0; i < count; i++) {
       const child = this.children[i];
 
-      if (this.completed.has(i)) continue;
+      if (this._completed.has(i)) continue;
 
       const status = child.executeTick();
 
       switch (status) {
         case NodeStatus.SUCCESS: {
-          this.completed.add(i);
+          this._completed.add(i);
           break;
         }
         case NodeStatus.FAILURE: {
-          this.completed.add(i);
-          this.failureCount++;
+          this._completed.add(i);
+          this._failureCount++;
           break;
         }
         case NodeStatus.RUNNING: {
@@ -89,12 +89,12 @@ export class ParallelAllNode extends ControlNode {
 
     if (skippedCount === this.childrenCount()) return NodeStatus.SKIPPED;
 
-    if (skippedCount + this.completed.size >= this.childrenCount()) {
+    if (skippedCount + this._completed.size >= this.childrenCount()) {
       this.haltChildren();
-      this.completed.clear();
+      this._completed.clear();
       const status =
-        this.failureCount >= this.failureThreshold ? NodeStatus.FAILURE : NodeStatus.SUCCESS;
-      this.failureCount = 0;
+        this._failureCount >= this.failureThreshold ? NodeStatus.FAILURE : NodeStatus.SUCCESS;
+      this._failureCount = 0;
       return status;
     }
 
@@ -103,22 +103,22 @@ export class ParallelAllNode extends ControlNode {
   }
 
   override halt(): void {
-    this.completed.clear();
-    this.failureCount = 0;
+    this._completed.clear();
+    this._failureCount = 0;
     super.halt();
   }
 
-  private _failureThreshold = 1;
+  private __failureThreshold = 1;
 
   get failureThreshold() {
-    return this._failureThreshold;
+    return this.__failureThreshold;
   }
 
   setFailureThreshold(threshold: number): void {
     if (threshold < 0) {
-      this._failureThreshold = Math.max(this.children.length + threshold + 1, 0);
+      this.__failureThreshold = Math.max(this.children.length + threshold + 1, 0);
     } else {
-      this._failureThreshold = threshold;
+      this.__failureThreshold = threshold;
     }
   }
 }

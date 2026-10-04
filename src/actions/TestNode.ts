@@ -1,7 +1,12 @@
-import { StatefulActionNode } from "../ActionNode";
-import type { NodeConfig } from "../TreeNode";
-import { NodeStatus, PortList, type NodeUserStatus } from "../basic";
-import { createRuntimeExecutor, type Environment, type ScriptFunction } from "../scripting/parser";
+import { StatefulActionNode } from "../ActionNode.js";
+import type { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, PortList, type NodeUserStatus } from "../basic.js";
+import {
+  createRuntimeExecutor,
+  supportScriptExpression,
+  type Environment,
+  type ScriptFunction,
+} from "../scripting/parser.js";
 
 export interface ITestNodeConfig {
   return_status: Exclude<keyof typeof NodeStatus, "IDLE">;
@@ -29,11 +34,18 @@ export interface ITestNodeConfig {
    * Function invoked when the action is completed. By default just return [return_status]
    * Override it to intorduce more comple cases
    */
-  complete_func: () => NodeUserStatus;
+  complete_func?: () => NodeUserStatus;
+
+  /**
+   * Optional script to compute the completion status dynamically. Evaluated
+   * when the TestNode completes, after any async_delay has elapsed, using the
+   * current blackboard state. Takes precedence over [return_status].
+   */
+  return_status_script?: string;
 }
 
 export class TestNodeConfig implements ITestNodeConfig {
-  return_status = "SUCCESS" as const;
+  return_status: Exclude<keyof typeof NodeStatus, "IDLE"> = "SUCCESS";
 
   success_script?: string;
 
@@ -42,6 +54,8 @@ export class TestNodeConfig implements ITestNodeConfig {
   post_script?: string;
 
   async_delay = 0;
+
+  return_status_script?: string;
 
   complete_func = () => NodeStatus[this.return_status] as NodeUserStatus;
 }
@@ -54,13 +68,13 @@ export class TestNode extends StatefulActionNode {
   constructor(
     name: string,
     config: NodeConfig,
-    private testConfig = new TestNodeConfig()
+    private _testConfig = new TestNodeConfig()
   ) {
     super(name, config);
     this.registrationId = "TestNode";
 
     // @ts-expect-error This comparison appears to be unintentional because the types 'string' and 'NodeStatus' have no overlap
-    if (testConfig.return_status === NodeStatus.IDLE) {
+    if (this._testConfig.return_status === NodeStatus.IDLE) {
       throw new Error("TestNode can not return IDLE");
     }
 
@@ -73,62 +87,107 @@ export class TestNode extends StatefulActionNode {
       };
     };
 
-    this.successExecutor = parseScript(testConfig.success_script);
-    this.successExecutor = parseScript(testConfig.failure_script);
-    this.successExecutor = parseScript(testConfig.post_script);
+    this._successExecutor = parseScript(this._testConfig.success_script);
+    this._failureExecutor = parseScript(this._testConfig.failure_script);
+    this._postExecutor = parseScript(this._testConfig.post_script);
+
+    // return_status_script may reference NodeStatus names, so it gets its own
+    // environment with those names injected.
+    if (this._testConfig.return_status_script) {
+      let execute: () => unknown;
+      const statusEnums = new Map(this.config.enums);
+      for (const key of Object.keys(NodeStatus) as (keyof typeof NodeStatus)[]) {
+        statusEnums.set(key, NodeStatus[key]);
+      }
+      const env: Environment = [this.config.blackboard, statusEnums];
+      const script = supportScriptExpression(this._testConfig.return_status_script);
+      this._returnStatusExecutor = () => {
+        if (!execute) execute = createRuntimeExecutor(env, script);
+        return execute();
+      };
+    }
   }
 
-  private timer: any;
+  private _timer: any;
 
-  private completed = false;
+  private _completed = false;
 
-  private successExecutor?: ScriptFunction;
+  private _successExecutor?: ScriptFunction;
 
-  private failureExecutor?: ScriptFunction;
+  private _failureExecutor?: ScriptFunction;
 
-  private postExecutor?: ScriptFunction;
+  private _postExecutor?: ScriptFunction;
+
+  private _returnStatusExecutor?: () => unknown;
 
   override onStart(): NodeUserStatus {
-    if (this.testConfig.async_delay <= 0) return this.onCompleted();
+    if (this._testConfig.async_delay <= 0) return this._onCompleted();
 
     // convert this in an asynchronous operation. Use another thread to count
     // a certain amount of time.
-    this.completed = false;
+    this._completed = false;
 
-    this.timer = setTimeout(() => {
-      if (this.timer === undefined) {
-        this.completed = false;
+    this._timer = setTimeout(() => {
+      if (this._timer === undefined) {
+        this._completed = false;
       } else {
-        this.completed = true;
+        this._completed = true;
         this.emitWakeUpSignal();
       }
-    }, this.testConfig.async_delay);
+    }, this._testConfig.async_delay);
 
     return NodeStatus.RUNNING;
   }
 
   override onRunning(): NodeUserStatus {
-    if (this.completed) return this.onCompleted();
+    if (this._completed) return this._onCompleted();
     return NodeStatus.RUNNING;
   }
 
   override onHalted(): void {
-    clearTimeout(this.timer);
-    this.timer = undefined;
+    clearTimeout(this._timer);
+    this._timer = undefined;
   }
 
-  private onCompleted(): NodeUserStatus {
-    const env: Environment = [this.config.blackboard, this.config.enums];
-
-    const status = this.testConfig.complete_func();
-    if (status === NodeStatus.SUCCESS && this.successExecutor) {
-      this.successExecutor(env);
-    } else if (status === NodeStatus.FAILURE && this.failureExecutor) {
-      this.failureExecutor(env);
+  private _onCompleted(): NodeUserStatus {
+    let status: NodeUserStatus;
+    if (this._returnStatusExecutor) {
+      status = this._resolveScriptStatus(this._returnStatusExecutor());
+    } else {
+      status = this._testConfig.complete_func();
     }
 
-    this.postExecutor?.(env);
+    // The success/failure/post scripts see only the node's own enums, so a
+    // blackboard entry that happens to be named like a status is not shadowed.
+    const env: Environment = [this.config.blackboard, this.config.enums];
 
+    if (status === NodeStatus.SUCCESS && this._successExecutor) {
+      this._successExecutor(env);
+    } else if (status === NodeStatus.FAILURE && this._failureExecutor) {
+      this._failureExecutor(env);
+    }
+
+    this._postExecutor?.(env);
+
+    return status;
+  }
+
+  private _resolveScriptStatus(result: unknown): NodeUserStatus {
+    let status: NodeStatus;
+    if (typeof result === "string") {
+      status = NodeStatus[result as keyof typeof NodeStatus];
+      if (status === undefined) {
+        throw new Error(`TestNode return_status_script resolved to unknown status [${result}]`);
+      }
+    } else if (typeof result === "number") {
+      status = result as NodeStatus;
+    } else {
+      throw new Error("TestNode return_status_script must evaluate to a NodeStatus value");
+    }
+
+    if (status === NodeStatus.IDLE) {
+      throw new Error("TestNode can not return IDLE");
+    }
     return status as NodeUserStatus;
   }
 }

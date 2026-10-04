@@ -1,6 +1,12 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, NodeUserStatus, PortList, createInputPort, isStatusCompleted } from "../basic";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import {
+  NodeStatus,
+  NodeUserStatus,
+  PortList,
+  createInputPort,
+  isStatusCompleted,
+} from "../basic.js";
 
 /**
  * @brief The delay node will introduce a delay and then tick the
@@ -19,10 +25,10 @@ export class DelayNode extends DecoratorNode {
   constructor(
     name: string,
     config: NodeConfig,
-    private ms: number = 0
+    private _delay_msec: number = 0
   ) {
     super(name, config);
-    if (!ms) this.readParameterFromPorts = true;
+    if (!this._delay_msec) this.readParameterFromPorts = true;
     this.registrationId = "Delay";
   }
 
@@ -37,12 +43,12 @@ export class DelayNode extends DecoratorNode {
   private delayComplete = false;
 
   static providedPorts(): PortList {
-    return new PortList([createInputPort("ms", "Tick the child after a few milliseconds")]);
+    return new PortList([createInputPort("delay_msec", "Tick the child after a few milliseconds")]);
   }
 
   protected override tick(): NodeUserStatus {
     if (this.readParameterFromPorts) {
-      this.ms = this.getInputOrThrow("ms", Number);
+      this._delay_msec = this.getInputOrThrow("delay_msec", Number);
     }
 
     if (!this.delayStarted) {
@@ -53,7 +59,7 @@ export class DelayNode extends DecoratorNode {
 
       this.timer = setTimeout(() => {
         this.delayComplete = true;
-      }, this.ms);
+      }, this._delay_msec);
     }
 
     if (this.delayAborted) {

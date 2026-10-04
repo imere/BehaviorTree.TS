@@ -1,6 +1,10 @@
 # compiled output
-dist
+build
 node_modules
+
+# lockfile, following the repo's existing "*.lock" convention at the bottom
+# (*.lock does not match pnpm-lock.yaml, so it needs its own entry)
+pnpm-lock.yaml
 
 # Logs
 .turbo

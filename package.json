@@ -3,10 +3,30 @@
   "version": "0.0.0",
   "description": "A (mostly) copy & paste repo of [BehaviorTree.CPP]",
   "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "main": "./build/dist/index.cjs",
+  "module": "./build/lib/index.js",
+  "types": "./build/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/lib/index.d.ts",
+      "import": "./build/lib/index.js",
+      "require": "./build/dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "build"
+  ],
   "scripts": {
     "prepare": "husky",
-    "build": "tsc -p tsconfig.dev.json",
-    "test": "jest",
+    "build": "tsc -p tsconfig.dev.json && rollup -c",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
     "lint": "eslint"
   },
   "keywords": [
@@ -14,23 +34,24 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "htmlparser2": "^10.0.0"
+    "htmlparser2": "^12.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.16.0",
-    "@types/eslint__js": "^9.14.0",
-    "@types/jest": "^30.0.0",
-    "eslint": "^9.16.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^16.0.0",
+    "@eslint/js": "^10.0.1",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^26.6.4",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.13.0",
     "husky": "^9.1.7",
-    "jest": "^30.0.0",
-    "lint-staged": "^16.0.0",
-    "prettier": "^3.3.2",
-    "ts-jest": "^29.2.5",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9",
+    "rollup": "^4.64.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2",
-    "typescript-eslint": "^8.17.0"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
   }
 }

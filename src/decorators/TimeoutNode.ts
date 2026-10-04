@@ -1,11 +1,17 @@
-import { DecoratorNode } from "../DecoratorNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, NodeUserStatus, PortList, createInputPort, isStatusCompleted } from "../basic";
+import { DecoratorNode } from "../DecoratorNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import {
+  NodeStatus,
+  NodeUserStatus,
+  PortList,
+  createInputPort,
+  isStatusCompleted,
+} from "../basic.js";
 
 /**
  * @brief The TimeoutNode will halt() a running child if
  * the latter has been RUNNING longer than a given time.
- * The timeout is in milliseconds and it is passed using the port "ms".
+ * The timeout is in milliseconds and it is passed using the port "msec".
  *
  * If timeout is reached, the node returns FAILURE.
  *
@@ -19,10 +25,10 @@ export class TimeoutNode extends DecoratorNode {
   constructor(
     name: string,
     config: NodeConfig,
-    private ms: number = 0
+    private _msec: number = 0
   ) {
     super(name, config);
-    if (!ms) this.readParameterFromPorts = true;
+    if (!this._msec) this.readParameterFromPorts = true;
     this.registrationId = "Timeout";
   }
 
@@ -37,7 +43,7 @@ export class TimeoutNode extends DecoratorNode {
   static providedPorts(): PortList {
     return new PortList([
       createInputPort(
-        "ms",
+        "msec",
         "After a certain amount of time, halt() the child if it is still running."
       ),
     ]);
@@ -45,7 +51,7 @@ export class TimeoutNode extends DecoratorNode {
 
   protected override tick(): NodeUserStatus {
     if (this.readParameterFromPorts) {
-      this.ms = this.getInputOrThrow("ms", Number);
+      this._msec = this.getInputOrThrow("msec", Number);
     }
 
     if (!this.timeoutStarted) {
@@ -55,14 +61,14 @@ export class TimeoutNode extends DecoratorNode {
 
       this.childHalted = false;
 
-      if (this.ms > 0) {
+      if (this._msec > 0) {
         this.timer = setTimeout(() => {
           if (this.child!.status === NodeStatus.RUNNING) {
             this.childHalted = true;
             this.haltChild();
             this.emitWakeUpSignal();
           }
-        }, this.ms);
+        }, this._msec);
       }
     }
 

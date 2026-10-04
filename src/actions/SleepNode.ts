@@ -1,6 +1,6 @@
-import { StatefulActionNode } from "../ActionNode";
-import { NodeConfig } from "../TreeNode";
-import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic";
+import { StatefulActionNode } from "../ActionNode.js";
+import { NodeConfig } from "../TreeNode.js";
+import { NodeStatus, PortList, createInputPort, type NodeUserStatus } from "../basic.js";
 
 export class SleepNode extends StatefulActionNode {
   private timer: any;
@@ -11,11 +11,11 @@ export class SleepNode extends StatefulActionNode {
   }
 
   static providedPorts(): PortList {
-    return new PortList([createInputPort("ms")]);
+    return new PortList([createInputPort("msec")]);
   }
 
   override onStart(): NodeUserStatus {
-    const ms = this.getInputOrThrow("ms", Number);
+    const ms = this.getInputOrThrow("msec", Number);
 
     if (ms <= 0) return NodeStatus.SUCCESS;
 
