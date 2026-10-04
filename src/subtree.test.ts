@@ -75,7 +75,7 @@ class PrintToConsole extends SyncActionNode {
 }
 
 describe("Subtree", () => {
-  test("SiblingPorts_BehaviorTree.CPPIssue_72", async () => {
+  test("BehaviorTree.CPPIssue72_SiblingPorts", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute="MainTree">
         <BehaviorTree ID="MainTree">
@@ -330,7 +330,7 @@ describe("Subtree", () => {
     expect(tree.subtrees.map((_) => _.blackboard.get("value"))).toEqual([1, 1]);
   });
 
-  test("SubtreeBehaviorTree.CPPIssue592", async () => {
+  test("BehaviorTree.CPPIssue592_Subtree", async () => {
     const xml = `
     <root BTTS_format="4" >
         <BehaviorTree ID="Outer_Tree">
@@ -384,7 +384,7 @@ describe("Subtree", () => {
     expect(await tree.tickWhileRunning()).toBeDefined();
   });
 
-  test("RemappingBehaviorTree.CPPIssue696", async () => {
+  test("BehaviorTree.CPPIssue696_Remapping", async () => {
     const xml = `
     <root BTTS_format="4" mainTreeToExecute = "MainTree">
       <BehaviorTree ID="Subtree1">
@@ -509,8 +509,8 @@ describe("Subtree", () => {
 });
 
 describe("BehaviorTree.CPPIssue1053_DuplicateSubtreeName", () => {
-  // two SubTree nodes with the same name, under different parents
-  const xml = `
+  test("two SubTree nodes sharing a name are rejected", () => {
+    const xml = `
     <root BTTS_format="4">
       <BehaviorTree ID="MainTree">
         <Sequence name="parent1">
@@ -525,7 +525,8 @@ describe("BehaviorTree.CPPIssue1053_DuplicateSubtreeName", () => {
       </BehaviorTree>
     </root>
   `;
-  const factory = new TreeFactory();
-  factory.registerTreeFromXML(xml);
-  expect(() => factory.createTree("MainTree")).toThrow(/Duplicate SubTree path/);
+    const factory = new TreeFactory();
+    factory.registerTreeFromXML(xml);
+    expect(() => factory.createTree("MainTree")).toThrow(/Duplicate SubTree path/);
+  });
 });

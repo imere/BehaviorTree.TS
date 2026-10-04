@@ -224,7 +224,7 @@ describe("PortTest", () => {
     }
   }
 
-  test("SubtreeStringInput_BehaviorTree.CPPIssue489", async () => {
+  test("BehaviorTree.CPPIssue489_SubtreeStringInput", async () => {
     const xml = `
     <root BTTS_format="4" >
       <BehaviorTree ID="Main">

@@ -165,7 +165,7 @@ describe("Preconditions", () => {
     expect(counters).toEqual([0, 1, 0, 1]);
   });
 
-  test("BehaviorTree.CPPIssue533", async () => {
+  test("BehaviorTree.CPPIssue533_SkipIfWithOnSuccess", async () => {
     const factory = new TreeFactory();
     const counters: number[] = [0, 0, 0];
     registerTestTick(factory, "Test", counters);

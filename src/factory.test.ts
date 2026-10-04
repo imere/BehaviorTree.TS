@@ -13,7 +13,7 @@ function makeTestMetadata(): Metadata {
 }
 
 describe("BehaviorTreeFactory", () => {
-  test("BehaviorTree.CPPIssue7", () => {
+  test("BehaviorTree.CPPIssue7_EmptyBehaviorTree", () => {
     const xml = `
       <root BTTS_format="4">
         <BehaviorTree ID="ReceiveGuest">

@@ -154,7 +154,7 @@ describe("ParserTest", () => {
     return NodeStatus.SUCCESS;
   }
 
-  test("Enums_BehaviorTree.CPPIssue_523", async () => {
+  test("BehaviorTree.CPPIssue523_Enums", async () => {
     const factory = new TreeFactory();
 
     const xml = `
@@ -206,7 +206,7 @@ describe("ParserTest", () => {
     }
   }
 
-  test("BehaviorTree.CPPIssue595", async () => {
+  test("BehaviorTree.CPPIssue595_SkipIfOnRemappedPort", async () => {
     const factory = new TreeFactory();
 
     const xml = `
