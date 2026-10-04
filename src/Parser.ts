@@ -338,7 +338,8 @@ export class Parser {
       ret,
       rootBlackboard,
       new TreeNode("", new NodeConfig()),
-      params
+      params,
+      new Set<string>()
     );
 
     ret.initialize();
@@ -353,7 +354,43 @@ export class Parser {
     tree: Tree,
     blackboard: Blackboard,
     rootNode: TreeNode,
-    params: { scriptingEnums: EnumsTable }
+    params: { scriptingEnums: EnumsTable },
+    ancestors: Set<string> = new Set()
+  ): void {
+    if (treeId !== undefined) {
+      if (ancestors.has(treeId)) {
+        throw new Error(`Recursive subtree detected: [${treeId}] refers to itself`);
+      }
+      ancestors.add(treeId);
+    }
+
+    try {
+      this.createSubtreeBody(
+        treeId,
+        treeName,
+        prefixPath,
+        tree,
+        blackboard,
+        rootNode,
+        params,
+        ancestors
+      );
+    } finally {
+      // a subtree may legitimately be referenced from several branches, so
+      // the guard has to be released on the way back out
+      if (treeId !== undefined) ancestors.delete(treeId);
+    }
+  }
+
+  private createSubtreeBody(
+    treeId: string | undefined,
+    treeName: string,
+    prefixPath: string,
+    tree: Tree,
+    blackboard: Blackboard,
+    rootNode: TreeNode,
+    params: { scriptingEnums: EnumsTable },
+    ancestors: Set<string>
   ): void {
     const recursiveStep = (
       parent: TreeNode,
@@ -444,7 +481,8 @@ export class Parser {
           tree,
           newBB,
           node,
-          params
+          params,
+          ancestors
         );
       }
     };

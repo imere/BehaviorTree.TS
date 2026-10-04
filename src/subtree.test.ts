@@ -475,4 +475,35 @@ describe("Subtree", () => {
     expect(() => factory.createTreeFromXML(xml)).toThrow();
     expect(() => factory.registerTreeFromXML(xml)).toThrow();
   });
+
+  test("BehaviorTree.CPPIssue979_RecursiveSubtree", () => {
+    // A refers to B, B refers back to A. Without a cycle guard this recurses
+    // until the stack blows up.
+    const xml = `
+      <root BTTS_format="4">
+        <BehaviorTree ID="A">
+          <SubTree ID="B" name="toB"/>
+        </BehaviorTree>
+        <BehaviorTree ID="B">
+          <SubTree ID="A" name="toA"/>
+        </BehaviorTree>
+      </root>
+    `;
+    const factory = new TreeFactory();
+    factory.registerTreeFromXML(xml);
+    expect(() => factory.createTree("A")).toThrow(/Recursive subtree/);
+  });
+
+  test("BehaviorTree.CPPIssue979_SelfRecursiveSubtree", () => {
+    const xml = `
+      <root BTTS_format="4">
+        <BehaviorTree ID="A">
+          <SubTree ID="A" name="toA"/>
+        </BehaviorTree>
+      </root>
+    `;
+    const factory = new TreeFactory();
+    factory.registerTreeFromXML(xml);
+    expect(() => factory.createTree("A")).toThrow(/Recursive subtree/);
+  });
 });
