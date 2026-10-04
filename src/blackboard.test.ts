@@ -378,3 +378,60 @@ describe("ParserTest", () => {
     expect(tree.rootBlackboard?.get("my_value")).toBe(false);
   });
 });
+
+describe("BehaviorTree.CPPIssue955_SetBlackboard", () => {
+  const xml = (value: string) => `
+    <root BTTS_format="4">
+      <BehaviorTree ID="MainTree">
+        <SetBlackboard value="${value}" outputKey="target"/>
+      </BehaviorTree>
+    </root>
+  `;
+
+  async function run(value: string) {
+    const factory = new TreeFactory();
+    factory.registerTreeFromXML(xml(value));
+    const tree = factory.createTree("MainTree");
+    return tree.tickExactlyOnce().then((status) => ({ status, bb: tree.rootBlackboard! }));
+  }
+
+  test("a literal value is written", async () => {
+    const { status, bb } = await run("42");
+    expect(status).toBe(NodeStatus.SUCCESS);
+    expect(bb.get("target")).toBe(42);
+  });
+
+  test("an unset source entry fails instead of writing undefined", async () => {
+    const { status, bb } = await run("{never_set}");
+    expect(status).toBe(NodeStatus.FAILURE);
+    expect(bb.get("target")).toBeUndefined();
+  });
+
+  test("both branches bump sequence_id and the timestamp", async () => {
+    const literal = new TreeFactory();
+    literal.registerTreeFromXML(xml("42"));
+    const litTree = literal.createTree("MainTree");
+    await litTree.tickExactlyOnce();
+    const litEntry = litTree.rootBlackboard!.getEntry("target")!;
+    expect(litEntry.sequence_id).toBe(1);
+    expect(litEntry.stamp).toBeGreaterThan(0);
+
+    const factory = new TreeFactory();
+    factory.registerTreeFromXML(`
+      <root BTTS_format="4">
+        <BehaviorTree ID="MainTree">
+          <SetBlackboard value="{source}" outputKey="target"/>
+        </BehaviorTree>
+      </root>
+    `);
+    const tree = factory.createTree("MainTree");
+    tree.rootBlackboard!.set("source", 7);
+    await tree.tickExactlyOnce();
+
+    // a direct entry write would leave sequence_id at 0
+    const entry = tree.rootBlackboard!.getEntry("target")!;
+    expect(entry.value).toBe(7);
+    expect(entry.sequence_id).toBe(1);
+    expect(entry.stamp).toBeGreaterThan(0);
+  });
+});

@@ -29,22 +29,23 @@ export class SetBlackboardNode extends SyncActionNode {
 
     const strippedKey = TreeNode.stripBlackboardPointer(valueStr);
 
+    let value: unknown;
+
     if (strippedKey) {
-      const inputKey = strippedKey;
-      const srcEntry = this.config.blackboard.getEntry(inputKey);
-      let dstEntry = this.config.blackboard.getEntry(outputKey);
+      const srcEntry = this.config.blackboard.getEntry(strippedKey);
 
       if (!srcEntry) throw new Error("Can't find the port referred by [value]");
 
-      if (!dstEntry) {
-        this.config.blackboard.createEntry(outputKey, srcEntry.info);
-        dstEntry = this.config.blackboard.getEntry(outputKey);
-      }
-
-      dstEntry!.value = srcEntry.value;
+      value = srcEntry.value;
     } else {
-      this.config.blackboard.set(outputKey, convertFromString(this.config.enums, valueStr));
+      value = convertFromString(this.config.enums, valueStr);
     }
+
+    if (value === undefined) return NodeStatus.FAILURE;
+
+    // set() rather than a direct entry write: it creates the entry and bumps
+    // sequence_id / stamp, which WaitValueUpdate and SkipUnlessUpdated read
+    this.config.blackboard.set(outputKey, value);
 
     return NodeStatus.SUCCESS;
   }
