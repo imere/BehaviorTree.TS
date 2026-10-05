@@ -1,4 +1,5 @@
 import { TreeFactory } from "../TreeFactory.js";
+import { TreeObserver } from "../TreeObserver.js";
 import { type PreTickCallback } from "../TreeNode.js";
 import { AlwaysFailureNode } from "../actions/AlwaysFailureNode.js";
 import { NodeStatus, isStatusCompleted } from "../basic.js";
@@ -71,6 +72,35 @@ describe("Reactive", () => {
     });
 
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+  });
+
+  test("TestLogging", async () => {
+    const reactive_xml_text = `
+<root BTTS_format="4" >
+  <BehaviorTree ID="Main">
+    <ReactiveSequence>
+      <TestA name="testA"/>
+      <AlwaysSuccess name="success"/>
+      <Sleep msec="100"/>
+    </ReactiveSequence>
+  </BehaviorTree>
+</root>
+`;
+
+    const factory = new TreeFactory();
+    const counters: number[] = [0];
+    registerTestTick(factory, "Test", counters);
+
+    const tree = factory.createTreeFromXML(reactive_xml_text);
+    const observer = new TreeObserver(tree);
+
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+
+    const num_ticks = counters[0];
+    expect(num_ticks).toBeGreaterThanOrEqual(5);
+
+    expect(observer.getStatisticsByPath("testA").successCount).toBe(num_ticks);
+    expect(observer.getStatisticsByPath("success").successCount).toBe(num_ticks);
   });
 
   test("TwoAsyncNodesInReactiveSequence", async () => {
