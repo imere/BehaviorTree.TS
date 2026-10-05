@@ -75,7 +75,7 @@ export class Parser {
       warn("The first tag of the (<root>) should contain the attribute [BTTS_format]");
     }
 
-    this.verifyTreeObject(json, this.registeredNodeTypes());
+    this.verifyTreeObject(json, this.registeredNodeTypes(), this.factory.builtinTags);
     this.loadSubtreeModel(json);
 
     // only <BehaviorTree> declares a tree; <TreeNodesModel> and anything else
@@ -104,9 +104,10 @@ export class Parser {
 
   verifyTreeObject(
     json: TreeObject | undefined | null,
-    registeredNodes: Map<string, NodeType>
+    registeredNodes: Map<string, NodeType>,
+    builtinTags: ReadonlySet<string>
   ): void {
-    verify(json, registeredNodes);
+    verify(json, registeredNodes, builtinTags);
   }
 
   instantiateTree(

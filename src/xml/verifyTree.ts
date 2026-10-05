@@ -1,11 +1,9 @@
-import { NodeType } from "../basic.js";
+import { NodeStatus, NodeType } from "../basic.js";
 import { fail } from "./XmlError.js";
 import { validateModelName } from "./nameValidation.js";
 import type { TreeNodeObject, TreeObject } from "./TreeObject.js";
 
 const MAX_NESTING_DEPTH = 256;
-
-const BUILTIN_TAGS = ["Decorator", "Action", "Condition", "Control", "SubTree"];
 
 /** Controls that keep running on their own, so only one may sit in a row. */
 const ASYNC_CHILDREN = ["ThreadedAction", "StatefulActionNode", "CoroActionNode", "AsyncSequence"];
@@ -14,10 +12,14 @@ const ASYNC_CHILDREN = ["ThreadedAction", "StatefulActionNode", "CoroActionNode"
  * Checks that the document is a tree the factory can actually build, before
  * anything is instantiated. Every rejection names the element it is about and
  * where that element was written.
+ *
+ * `builtinTags` are the element names that select a node type by their [ID]
+ * rather than by their own name; the factory owns that set.
  */
 export function verifyTreeObject(
   json: TreeObject | undefined | null,
-  registeredNodes: Map<string, NodeType>
+  registeredNodes: Map<string, NodeType>,
+  builtinTags: ReadonlySet<string>
 ): void {
   const root = json;
 
@@ -37,7 +39,7 @@ export function verifyTreeObject(
     // not having a MetaModel is not an error. But consider that the
     // Graphical editor needs it.
     for (const node of root.children) {
-      if (BUILTIN_TAGS.includes(node.name) && !node.props?.ID) {
+      if (builtinTags.has(node.name) && !node.props?.ID) {
         fail(node, `${node.name}: The attribute [ID] is mandatory`);
       }
     }
@@ -63,7 +65,7 @@ export function verifyTreeObject(
     const { name } = node;
     const id = node.props?.ID as string | undefined;
 
-    const isBuiltin = BUILTIN_TAGS.includes(name);
+    const isBuiltin = builtinTags.has(name);
     if (isBuiltin && !id) {
       fail(node, `The tag <${name}> must have the attribute [ID]`);
     }

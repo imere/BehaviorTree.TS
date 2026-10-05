@@ -1,5 +1,6 @@
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
+import type { RollupOptions } from "rollup";
 
 function transpile() {
   return typescript({
@@ -19,7 +20,7 @@ function transpile() {
   });
 }
 
-export default [
+const config: RollupOptions[] = [
   {
     input: "src/index.ts",
     external: ["htmlparser2"],
@@ -42,3 +43,5 @@ export default [
     plugins: [transpile(), nodeResolve()],
   },
 ];
+
+export default config;

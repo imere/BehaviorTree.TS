@@ -116,6 +116,14 @@ export class TreeFactory {
    */
   readonly offTickExecutor: OffTickExecutor;
 
+  /**
+   * The element names that pick a node type by their [ID] rather than by their
+   * own name. A custom node type is written as <MyAction/>, so its element name
+   * is the registered ID; these five are the generic tags of the XML format
+   * itself, and a document may add to the set.
+   */
+  readonly builtinTags = new Set(["Decorator", "Action", "Condition", "Control", "SubTree"]);
+
   private readonly builtinIds = new Set<string>();
 
   private readonly scriptingEnums: EnumsTable;

@@ -1,0 +1,15 @@
+# Store LF in the repository and check LF out, on every platform.
+#
+# The CI matrix runs on ubuntu, macos and windows, and prettier's endOfLine
+# default is "lf". Without this rule a Windows checkout with the default
+# core.autocrlf=true turns every file into CRLF, and `prettier --check` then
+# reports the whole tree as unformatted.
+* text=auto eol=lf
+
+# Keep the working tree clean on Windows for the tools that do not go through
+# git's filters.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Rollup writes these; they are not text to be diffed.
+build/** linguist-generated=true
