@@ -1,4 +1,9 @@
-import { SimpleActionNode, SimpleAsyncActionNode } from "./ActionNode.js";
+import {
+  SimpleActionNode,
+  SimpleAsyncActionNode,
+  microtaskExecutor,
+  type OffTickExecutor,
+} from "./ActionNode.js";
 import { Blackboard } from "./Blackboard.js";
 import { SimpleConditionNode } from "./ConditionNode.js";
 import { warn } from "./Logger.js";
@@ -104,13 +109,21 @@ export class TreeFactory {
 
   readonly substitutionRules = new Map<string, SubstitutionRule>();
 
+  /**
+   * Handed to every ThreadedAction this factory builds, so the action runs its
+   * tick outside the tick path. Defaults to microtaskExecutor; pass a worker or
+   * a WASM-thread backend to run the work somewhere else.
+   */
+  readonly offTickExecutor: OffTickExecutor;
+
   private readonly builtinIds = new Set<string>();
 
   private readonly scriptingEnums: EnumsTable;
 
   private parser: Parser;
 
-  constructor() {
+  constructor(options: { offTickExecutor?: OffTickExecutor } = {}) {
+    this.offTickExecutor = options.offTickExecutor ?? microtaskExecutor;
     this.parser = new Parser(this);
 
     this.registerNodeType(FallbackNode, "Fallback", new PortList());
