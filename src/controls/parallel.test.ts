@@ -349,7 +349,3 @@ describe("Parallel.Issue593", () => {
     expect(counters[0]).toBe(0);
   });
 });
-
-// The remaining tests in gtest_parallel.cpp (FailingParallel, ParallelAll and the
-// ComplexParallelTest group) assert through BT::TreeObserver statistics, which
-// this port has no equivalent of.

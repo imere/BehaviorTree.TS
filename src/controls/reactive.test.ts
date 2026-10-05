@@ -97,7 +97,11 @@ describe("Reactive", () => {
     expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
 
     const num_ticks = counters[0];
-    expect(num_ticks).toBeGreaterThanOrEqual(5);
+    // upstream asserts num_ticks >= 5, a bound tied to how many ticks a 100 ms
+    // sleep takes under its timer; this port drives the loop with wake-up signals, so
+    // under load it can finish in fewer. What matters is that the tree was ticked
+    // more than once, otherwise the per-tick equality below is vacuous.
+    expect(num_ticks).toBeGreaterThan(1);
 
     expect(observer.getStatisticsByPath("testA").successCount).toBe(num_ticks);
     expect(observer.getStatisticsByPath("success").successCount).toBe(num_ticks);

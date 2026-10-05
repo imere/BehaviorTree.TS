@@ -13,13 +13,13 @@ class SimpleCondition extends ConditionNode {
   constructor(
     name: string,
     config: NodeConfig,
-    private portName: string
+    private _portName: string
   ) {
     super(name, config);
   }
 
   protected override tick(): NodeUserStatus {
-    return this.config.blackboard.get(this.portName) ? NodeStatus.SUCCESS : NodeStatus.FAILURE;
+    return this.config.blackboard.get(this._portName) ? NodeStatus.SUCCESS : NodeStatus.FAILURE;
   }
 }
 
@@ -28,24 +28,24 @@ class AsyncTestAction extends StatefulActionNode {
     return new PortList();
   }
 
-  private counter = 0;
+  private _counter = 0;
 
   constructor(
     name: string,
     config: NodeConfig,
-    private portName: string
+    private _portName: string
   ) {
     super(name, config);
   }
 
   override onStart(): NodeUserStatus {
-    this.counter = 0;
+    this._counter = 0;
     return NodeStatus.RUNNING;
   }
 
   override onRunning(): NodeUserStatus {
-    if (++this.counter === 2) {
-      this.config.blackboard.set(this.portName, true);
+    if (++this._counter === 2) {
+      this.config.blackboard.set(this._portName, true);
       return NodeStatus.SUCCESS;
     }
     return NodeStatus.RUNNING;
@@ -149,7 +149,8 @@ test("EnsureWarmWithEnsureHoldingHacket", async () => {
 
   factory.registerTreeFromXML(xml_text);
   const tree = factory.createTree("EnsureWarm");
-  // const observer = new TreeObserver(tree);
+  const observer = new TreeObserver(tree);
+  expect(observer.statistics().size).toBeGreaterThan(0);
 
   tree.subtrees[0].blackboard.set("is_warm", false);
   tree.subtrees[1].blackboard.set("holding_jacket", false);
