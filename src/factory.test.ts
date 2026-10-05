@@ -384,7 +384,7 @@ describe("MalformedXML_InvalidRoot", () => {
 
 describe("MalformedXML_MissingRootElement", () => {
   const xml = [
-    `<something BTCPP_format="4">`,
+    `<something BTTS_format="4">`,
     `  <BehaviorTree ID="Main">`,
     `    <AlwaysSuccess/>`,
     `  </BehaviorTree>`,
@@ -398,7 +398,7 @@ describe("MalformedXML_MissingRootElement", () => {
 
 describe("MalformedXML_EmptyBehaviorTree", () => {
   const xml = [
-    `<root BTCPP_format="4">`,
+    `<root BTTS_format="4">`,
     `  <BehaviorTree ID="Main">`,
     `  </BehaviorTree>`,
     `</root>`,
@@ -411,7 +411,7 @@ describe("MalformedXML_EmptyBehaviorTree", () => {
 
 describe("MalformedXML_EmptyBehaviorTreeID", () => {
   const xml = [
-    `<root BTCPP_format="4">`,
+    `<root BTTS_format="4">`,
     `  <BehaviorTree ID="">`,
     `    <AlwaysSuccess/>`,
     `  </BehaviorTree>`,
@@ -434,7 +434,7 @@ describe("MalformedXML_EmptyBehaviorTreeID", () => {
 
 describe("MalformedXML_MissingBehaviorTreeID", () => {
   const xml = [
-    `<root BTCPP_format="4">`,
+    `<root BTTS_format="4">`,
     `  <BehaviorTree>`,
     `    <AlwaysSuccess/>`,
     `  </BehaviorTree>`,
@@ -454,7 +454,7 @@ describe("MalformedXML_DeeplyNestedElements", () => {
   // than a stack overflow
   const depth = 300;
   const xml = [
-    `<root BTCPP_format="4"><BehaviorTree ID="Main">`,
+    `<root BTTS_format="4"><BehaviorTree ID="Main">`,
     "<Sequence>".repeat(depth),
     `<AlwaysSuccess/>`,
     "</Sequence>".repeat(depth),
@@ -469,7 +469,7 @@ describe("MalformedXML_DeeplyNestedElements", () => {
 describe("MalformedXML_ModerateNestingIsOK", () => {
   const depth = 50;
   const xml = [
-    `<root BTCPP_format="4"><BehaviorTree ID="Main">`,
+    `<root BTTS_format="4"><BehaviorTree ID="Main">`,
     "<Sequence>".repeat(depth),
     `<AlwaysSuccess/>`,
     "</Sequence>".repeat(depth),
@@ -483,7 +483,7 @@ describe("MalformedXML_ModerateNestingIsOK", () => {
 
 describe("MalformedXML_MultipleBTChildElements", () => {
   const xml = [
-    `<root BTCPP_format="4">`,
+    `<root BTTS_format="4">`,
     `  <BehaviorTree ID="Main">`,
     `    <AlwaysSuccess/>`,
     `    <AlwaysFailure/>`,
@@ -509,7 +509,7 @@ describe("MalformedXML_CompletelyEmpty", () => {
 });
 
 describe("MalformedXML_EmptyRoot", () => {
-  const xml = `<root BTCPP_format="4"></root>`;
+  const xml = `<root BTTS_format="4"></root>`;
 
   it("registers but cannot create a tree from a <root> with no children", () => {
     const factory = new TreeFactory();
@@ -521,7 +521,7 @@ describe("MalformedXML_EmptyRoot", () => {
 
 describe("MalformedXML_UnknownNodeType", () => {
   const xml = [
-    `<root BTCPP_format="4">`,
+    `<root BTTS_format="4">`,
     `  <BehaviorTree ID="Main">`,
     `    <NonExistentNodeType/>`,
     `  </BehaviorTree>`,
