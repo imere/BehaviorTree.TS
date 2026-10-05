@@ -4,6 +4,7 @@ import { type PreTickCallback } from "../TreeNode.js";
 import { AlwaysFailureNode } from "../actions/AlwaysFailureNode.js";
 import { NodeStatus, isStatusCompleted } from "../basic.js";
 import { registerTestTick } from "../testing/helper.js";
+import { vi } from "vitest";
 
 describe("Reactive", () => {
   test("RunningChildren", async () => {
@@ -94,14 +95,19 @@ describe("Reactive", () => {
     const tree = factory.createTreeFromXML(reactive_xml_text);
     const observer = new TreeObserver(tree);
 
-    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+    // The tick loop waits on setTimeout, so the clock has to be advanced while
+    // it runs; with the real clock the number of ticks a 100 ms sleep takes
+    // depends on how loaded the machine is, which made this test flaky.
+    vi.useFakeTimers();
+    const finished = tree.tickWhileRunning();
+    await vi.advanceTimersByTimeAsync(200);
+    const status = await finished;
+    vi.useRealTimers();
+
+    expect(status).toBe(NodeStatus.SUCCESS);
 
     const num_ticks = counters[0];
-    // upstream asserts num_ticks >= 5, a bound tied to how many ticks a 100 ms
-    // sleep takes under its timer; this port drives the loop with wake-up signals, so
-    // under load it can finish in fewer. What matters is that the tree was ticked
-    // more than once, otherwise the per-tick equality below is vacuous.
-    expect(num_ticks).toBeGreaterThan(1);
+    expect(num_ticks).toBeGreaterThanOrEqual(5);
 
     expect(observer.getStatisticsByPath("testA").successCount).toBe(num_ticks);
     expect(observer.getStatisticsByPath("success").successCount).toBe(num_ticks);
