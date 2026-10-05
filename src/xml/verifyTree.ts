@@ -101,6 +101,9 @@ export function verifyTreeObject(
         expectChildren(node, 0);
       } else if (search === NodeType.Control) {
         expectChildren(node, Infinity);
+        if (lookupName === "TryCatch" && (node.children?.length ?? 0) < 2) {
+          fail(node, "The node 'TryCatch' must have at least 2 children");
+        }
         // keyed off the registration, as upstream does, so
         // <Control ID="ReactiveSequence"> is checked too
         if (lookupName === "ReactiveSequence") {

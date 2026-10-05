@@ -53,7 +53,7 @@ describe("Reactive", () => {
           <ReactiveSequence>
             <AlwaysFailure name="failureA"/>
             <AlwaysFailure name="failureB"/>
-            <Sleep ms="100"/>
+            <Sleep msec="100"/>
           </ReactiveSequence>
         </BehaviorTree>
       </root>
