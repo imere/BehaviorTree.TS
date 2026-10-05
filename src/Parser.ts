@@ -4,7 +4,6 @@ import {
   isReservedAttribute,
   NodeType,
   PortDirection,
-  type PortList,
 } from "./basic.js";
 import { Blackboard } from "./Blackboard.js";
 import { ControlNode } from "./ControlNode.js";
@@ -14,6 +13,7 @@ import { SubTreeNode } from "./decorators/SubtreeNode.js";
 import { parseXmlDocument } from "./xml/XmlDocument.js";
 import { fail, type Positioned } from "./xml/XmlError.js";
 import { toTreeObject, type TreeNodeObject, type TreeObject } from "./xml/TreeObject.js";
+import { loadSubtreeModels, type SubtreeModels } from "./xml/TreeNodesModel.js";
 import { verifyTreeObject as verify } from "./xml/verifyTree.js";
 import { type EnumsTable } from "./scripting/parser.js";
 import { Subtree, Tree, type TreeFactory } from "./TreeFactory.js";
@@ -40,13 +40,6 @@ export const convertFromString = (scriptingEnums: EnumsTable, value: string | un
     return value;
   }
 };
-
-/** What a <TreeNodesModel> declares about one subtree, keyed by subtree ID. */
-interface SubtreeModel {
-  ports: PortList;
-}
-
-type SubtreeModels = Map<string, SubtreeModel>;
 
 export function parseXML(xml: string): TreeObject {
   return toTreeObject(parseXmlDocument(xml));
@@ -89,8 +82,13 @@ export class Parser {
     }
   }
 
-  /** <TreeNodesModel> is not parsed yet, so no model is ever available. */
-  loadSubtreeModel(_json: TreeObject): void {}
+  /**
+   * Reads the subtree port models this document declares. They accumulate
+   * across documents, so a model registered separately still applies.
+   */
+  loadSubtreeModel(json: TreeObject): void {
+    loadSubtreeModels(json, this.subtreeModels);
+  }
 
   private registeredNodeTypes(): Map<string, NodeType> {
     const registeredNodes = new Map<string, NodeType>();
@@ -319,7 +317,8 @@ export class Parser {
       // don't override existing remapping
       if (remapping.has(portName) || autoRemap) continue;
 
-      if (typeof portInfo.defaultValue === "undefined") {
+      // an empty default means the model gave none, so the port is mandatory
+      if (portInfo.defaultValueString === "") {
         fail(
           json,
           `In the <TreeNodesModel> the <SubTree ID="${subtreeId}"> is defining a ` +
