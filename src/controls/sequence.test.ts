@@ -1,7 +1,9 @@
 import { NodeConfig } from "../TreeNode.js";
 import { NodeStatus } from "../basic.js";
+import { Tree, TreeFactory } from "../TreeFactory.js";
 import { AsyncActionTest, SyncActionTest } from "../testing/ActionTestNode.js";
 import { ConditionTestNode } from "../testing/ConditionTestNode.js";
+import { registerTestTick } from "../testing/helper.js";
 import { ReactiveSequence } from "./ReactiveSequence.js";
 import { SequenceNode } from "./SequenceNode.js";
 
@@ -197,5 +199,44 @@ describe("ComplexSequence2ActionsTest", () => {
     expect(seq_2.status).toBe(NodeStatus.RUNNING);
     expect(condition_2.status).toBe(NodeStatus.SUCCESS);
     expect(action_2.status).toBe(NodeStatus.RUNNING);
+  });
+});
+
+describe("SequenceWithMemoryTest.Issue_636", () => {
+  const xml = `
+<root BTTS_format="4" mainTreeToExecute="MainTree" >
+
+    <BehaviorTree ID="MainTree">
+        <SequenceWithMemory>
+            <Script code = " counter = 0 " />
+            <TestA/>
+            <ScriptCondition code = "counter+=1; counter >= 5" />
+            <TestB/>
+            <TestC/>
+        </SequenceWithMemory>
+    </BehaviorTree>
+</root>`;
+
+  // upstream loops until the tree reports SUCCESS; the cap keeps a regression
+  // from hanging the suite instead of failing it
+  async function tickUntilSuccess(tree: Tree): Promise<number> {
+    let res = await tree.tickOnce();
+    let tickCount = 1;
+    while (res !== NodeStatus.SUCCESS && tickCount <= 20) {
+      res = await tree.tickOnce();
+      tickCount++;
+    }
+    return res === NodeStatus.SUCCESS ? tickCount : -1;
+  }
+
+  it("runs every child exactly once, however many ticks it takes", async () => {
+    const factory = new TreeFactory();
+    const counters: number[] = [0, 0, 0];
+    registerTestTick(factory, "Test", counters);
+
+    const tickCount = await tickUntilSuccess(factory.createTreeFromXML(xml));
+
+    expect(counters).toEqual([1, 1, 1]);
+    expect(tickCount).toBe(5);
   });
 });

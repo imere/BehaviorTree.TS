@@ -3,6 +3,7 @@ import { SimpleDecoratorNode } from "./DecoratorNode.js";
 import { NodeConfig } from "./TreeNode.js";
 import { NodeStatus, type NodeUserStatus } from "./basic.js";
 import { TimeoutNode } from "./decorators/TimeoutNode.js";
+import { TreeFactory } from "./TreeFactory.js";
 import { AsyncActionTest } from "./testing/ActionTestNode.js";
 
 const sleepFor = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -100,5 +101,74 @@ describe("BehaviorTree.CPPIssue1206_ChildCompletedAfterTickIsNotDiscarded", () =
     // the second tick must surface SUCCESS, not re-run the action
     expect(decorator.executeTick()).toBe(NodeStatus.SUCCESS);
     expect(child.starts).toBe(1);
+  });
+});
+
+describe("Decorator.KeepRunningUntilFailure", () => {
+  const xml = `
+    <root BTTS_format="4">
+       <BehaviorTree>
+          <KeepRunningUntilFailure>
+            <SuccessThenFail/>
+          </KeepRunningUntilFailure>
+       </BehaviorTree>
+    </root>`;
+
+  it("keeps returning RUNNING until the child finally fails", async () => {
+    const factory = new TreeFactory();
+
+    let tickCount = 0;
+    factory.registerSimpleAction("SuccessThenFail", (): NodeUserStatus => {
+      tickCount++;
+      if (tickCount < 3) {
+        return NodeStatus.SUCCESS;
+      }
+      return NodeStatus.FAILURE;
+    });
+
+    const tree = factory.createTreeFromXML(xml);
+
+    // First tick - child succeeds, should return RUNNING
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+    expect(tickCount).toBe(1);
+
+    // Second tick - child succeeds again, should return RUNNING
+    expect(await tree.tickOnce()).toBe(NodeStatus.RUNNING);
+    expect(tickCount).toBe(2);
+
+    // Third tick - child fails, should return FAILURE
+    expect(await tree.tickOnce()).toBe(NodeStatus.FAILURE);
+    expect(tickCount).toBe(3);
+  });
+});
+
+describe("RetryTest.RetryTestA", () => {
+  it("retries a failing child up to num_attempts, then fails", async () => {
+    const factory = new TreeFactory();
+    const state = { expected: NodeStatus.FAILURE as NodeUserStatus, ticks: 0 };
+    factory.registerSimpleAction("Controllable", (): NodeUserStatus => {
+      state.ticks++;
+      return state.expected;
+    });
+
+    const xml = `
+    <root BTTS_format="4">
+      <BehaviorTree ID="MainTree">
+        <RetryUntilSuccessful num_attempts="3">
+          <Controllable/>
+        </RetryUntilSuccessful>
+      </BehaviorTree>
+    </root>`;
+
+    const tree = factory.createTreeFromXML(xml);
+
+    expect(await tree.tickOnce()).toBe(NodeStatus.FAILURE);
+    expect(state.ticks).toBe(3);
+
+    state.ticks = 0;
+    state.expected = NodeStatus.SUCCESS;
+
+    expect(await tree.tickOnce()).toBe(NodeStatus.SUCCESS);
+    expect(state.ticks).toBe(1);
   });
 });
