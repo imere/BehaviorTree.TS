@@ -541,3 +541,42 @@ describe("MalformedXML_UnknownNodeType", () => {
     expect((e as XmlError).column).toBe(5);
   });
 });
+
+describe("every tag goes through the registered-node lookup", () => {
+  function build(body: string) {
+    return new TreeFactory().createTreeFromXML(`
+    <root BTTS_format="4">
+      <BehaviorTree ID="Main">
+        ${body}
+      </BehaviorTree>
+    </root>`);
+  }
+
+  it("a <Sequence> with no children is rejected, being a Control", () => {
+    expect(() => build("<Sequence/>")).toThrow(/The node 'Sequence' must have 1 or more/);
+  });
+
+  it("a <Fallback> with no children is rejected too", () => {
+    expect(() => build("<Fallback/>")).toThrow(/The node 'Fallback' must have 1 or more/);
+  });
+
+  it("a <Sequence> with a child is accepted", () => {
+    expect(() => build("<Sequence><AlwaysSuccess/></Sequence>")).not.toThrow();
+  });
+
+  it("an <Action> with a child is accepted, upstream does not check those", () => {
+    expect(() => build(`<Action ID="AlwaysSuccess"><AlwaysSuccess/></Action>`)).not.toThrow();
+  });
+
+  it("names the registered name, not the tag, when a decorator has no child", () => {
+    expect(() => build(`<Decorator ID="Inverter"/>`)).toThrow(
+      /The node 'Inverter' must have exactly 1 child/
+    );
+  });
+
+  it("a TryCatch needs two children", () => {
+    expect(() => build("<TryCatch><AlwaysSuccess/></TryCatch>")).toThrow(
+      /The node 'TryCatch' must have at least 2 children/
+    );
+  });
+});

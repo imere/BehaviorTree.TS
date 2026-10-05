@@ -69,7 +69,7 @@ export function verifyTreeObject(
     }
 
     if (name === "SubTree") {
-      expectChildren(node, 0);
+      expectChildren(node, 0, "SubTree" + (id as string));
       if (registeredNodes.has(id as string)) {
         fail(
           node,
@@ -78,7 +78,7 @@ export function verifyTreeObject(
       }
       validateModelName(id as string, node);
     } else if (name === "BehaviorTree") {
-      expectChildren(node, 1);
+      expectChildren(node, 1, "BehaviorTree" + (id ?? "Tree_0"));
       if (!id && behavior_tree_count > 1) {
         fail(node, "The tag <BehaviorTree> must have the attribute [ID]");
       }
@@ -89,24 +89,22 @@ export function verifyTreeObject(
         );
       }
       if (id) validateModelName(id, node);
-    } else if (!["Sequence", "Fallback"].includes(name)) {
-      // builtin node types are looked up by their ID, everything else by the
-      // element name
+    } else {
+      // use ID for builtin node types, otherwise use the element name
       const lookupName = isBuiltin ? (id as string) : name;
+
+      // a custom node type is registered under its element name
+      if (!isBuiltin) validateModelName(name, node);
+
       const search = registeredNodes.get(lookupName);
       if (search === undefined) {
         fail(node, `Node not recognized: ${lookupName}`);
       }
 
-      // a custom node type is registered under its element name
-      if (!isBuiltin) validateModelName(name, node);
-
       if (search === NodeType.Decorator) {
-        expectChildren(node, 1);
-      } else if (search === NodeType.Action || search === NodeType.Condition) {
-        expectChildren(node, 0);
+        expectChildren(node, 1, lookupName);
       } else if (search === NodeType.Control) {
-        expectChildren(node, Infinity);
+        expectChildren(node, Infinity, lookupName);
         if (lookupName === "TryCatch" && (node.children?.length ?? 0) < 2) {
           fail(node, "The node 'TryCatch' must have at least 2 children");
         }
@@ -144,24 +142,18 @@ function verifyReactiveSequence(
   }
 }
 
-function expectChildren(node: TreeNodeObject, childrenCount: number, propNames?: string[]): void {
-  const { name } = node;
+/**
+ * `name` is what the type was registered under, which is what upstream names in
+ * its message: for `<Action ID="AlwaysSuccess">` that is AlwaysSuccess, not the
+ * element name Action.
+ */
+function expectChildren(node: TreeNodeObject, childrenCount: number, name: string): void {
   const count = node.children?.length || 0;
   if (childrenCount === Infinity) {
     if (!count) {
-      fail(node, `The tag <${name}> must have at least 1 child`);
+      fail(node, `The node '${name}' must have 1 or more children`);
     }
   } else if (count !== childrenCount) {
-    fail(
-      node,
-      `The tag <${name}> must ${
-        childrenCount ? `have exactly ${childrenCount}` : "not have any"
-      } child`
-    );
+    fail(node, `The node '${name}' must have exactly ${childrenCount} child`);
   }
-  propNames?.forEach((prop) => {
-    if (!node.props?.[prop]) {
-      fail(node, `The tag <${name}> must have the attribute [${prop}]`);
-    }
-  });
 }
