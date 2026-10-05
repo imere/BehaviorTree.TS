@@ -7,17 +7,17 @@ export class SyncActionTest extends SyncActionNode {
     super(name, config);
   }
 
-  private expectedResult = NodeStatus.SUCCESS;
+  private _expectedResult = NodeStatus.SUCCESS;
 
   setExpectedResult(res: NodeStatus) {
-    this.expectedResult = res;
+    this._expectedResult = res;
   }
 
   private _tickCount = 0;
 
   protected override tick(): NodeUserStatus {
     this._tickCount++;
-    return this.expectedResult as NodeUserStatus;
+    return this._expectedResult as NodeUserStatus;
   }
 
   tickCount() {
@@ -38,39 +38,39 @@ export class AsyncActionTest extends StatefulActionNode {
   constructor(
     name: string,
     config: NodeConfig,
-    private deadlineMs = 0
+    private _deadlineMs = 0
   ) {
     super(name, config);
   }
 
-  private expectedResult = NodeStatus.SUCCESS;
+  private _expectedResult = NodeStatus.SUCCESS;
 
   setExpectedResult(res: NodeUserStatus) {
-    this.expectedResult = res;
+    this._expectedResult = res;
   }
 
-  private initialTime = 0;
+  private _initialTime = 0;
 
-  private timer: any;
+  private _timer: ReturnType<typeof setTimeout> | undefined;
 
   override onStart(): NodeUserStatus {
-    this.initialTime = Date.now();
-    clearTimeout(this.timer);
-    this.timer = setTimeout(async () => {
-      this.setStatus(this.expectedResult as NodeUserStatus);
-      this.timer = undefined;
+    this._initialTime = Date.now();
+    clearTimeout(this._timer);
+    this._timer = setTimeout(() => {
+      this.setStatus(this._expectedResult as NodeUserStatus);
+      this._timer = undefined;
       this._tickCount++;
-    }, this.deadlineMs);
+    }, this._deadlineMs);
     return NodeStatus.RUNNING;
   }
 
   override onRunning(): NodeUserStatus {
-    if (!this.isHaltRequested() && Date.now() < this.initialTime + this.deadlineMs) {
+    if (!this.isHaltRequested() && Date.now() < this._initialTime + this._deadlineMs) {
       return NodeStatus.RUNNING;
     }
-    clearTimeout(this.timer);
+    clearTimeout(this._timer);
     this._tickCount++;
-    switch (this.expectedResult) {
+    switch (this._expectedResult) {
       case NodeStatus.SUCCESS: {
         this.successCount++;
         break;
@@ -80,11 +80,11 @@ export class AsyncActionTest extends StatefulActionNode {
         break;
       }
     }
-    return this.expectedResult as NodeUserStatus;
+    return this._expectedResult as NodeUserStatus;
   }
 
   override onHalted(): void {
-    clearTimeout(this.timer);
+    clearTimeout(this._timer);
   }
 
   private _tickCount = 0;
@@ -101,75 +101,6 @@ export class AsyncActionTest extends StatefulActionNode {
   failureCount = 0;
 
   setTime(ms: number) {
-    this.deadlineMs = ms;
+    this._deadlineMs = ms;
   }
 }
-
-// @ImplementPorts
-// export class AsyncActionTest extends ThreadedAction {
-//   static providedPorts() {
-//     return new PortList();
-//   }
-
-//   constructor(name: string, config: NodeConfig, private deadlineMs = 0) {
-//     super(name, config);
-//   }
-
-//   private expectedResult: NodeUserStatus = NodeStatus.SUCCESS;
-
-//   setExpectedResult(res: NodeUserStatus) {
-//     this.expectedResult = res;
-//   }
-
-//   private initialTime = 0;
-//   private timer: any;
-
-//   protected override tick(): NodeUserStatus {
-//     if (!this.timer) {
-//       this.initialTime = Date.now();
-//       this.timer = setTimeout(async () => {
-//         if (!this.isHaltRequested()) this.setStatus(this.expectedResult as NodeUserStatus);
-//         this._tickCount++;
-//         this.timer = undefined;
-//       }, this.deadlineMs);
-//     }
-
-//     if (!this.isHaltRequested() && Date.now() < this.initialTime + this.deadlineMs) {
-//       return NodeStatus.RUNNING;
-//     }
-
-//     clearTimeout(this.timer);
-//     this.timer = undefined;
-
-//     // check if we exited the while() loop because of the flag stop_loop_
-//     if (this.isHaltRequested()) return NodeStatus.IDLE as NodeUserStatus;
-
-//     if (this.expectedResult === NodeStatus.SUCCESS) this.successCount++;
-//     else if (this.expectedResult === NodeStatus.FAILURE) this.failureCount++;
-
-//     return this.expectedResult;
-//   }
-
-//   protected override halt(): void {
-//     clearTimeout(this.timer);
-//     this.timer = undefined;
-//     super.halt();
-//   }
-
-//   private _tickCount = 0;
-
-//   tickCount() {
-//     return this._tickCount;
-//   }
-
-//   resetTickCount() {
-//     this._tickCount = 0;
-//   }
-
-//   successCount = 0;
-//   failureCount = 0;
-
-//   setTime(ms: number) {
-//     this.deadlineMs = ms;
-//   }
-// }

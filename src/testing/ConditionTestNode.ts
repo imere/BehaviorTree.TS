@@ -7,17 +7,17 @@ export class ConditionTestNode extends ConditionNode {
     super(name, config);
   }
 
-  private expectedResult = NodeStatus.SUCCESS;
+  private _expectedResult = NodeStatus.SUCCESS;
 
   setExpectedResult(res: NodeStatus) {
-    this.expectedResult = res;
+    this._expectedResult = res;
   }
 
   private _tickCount = 0;
 
   protected override tick(): NodeUserStatus {
     this._tickCount++;
-    return this.expectedResult as NodeUserStatus;
+    return this._expectedResult as NodeUserStatus;
   }
 
   tickCount() {
