@@ -12,6 +12,7 @@ import { DecoratorNode } from "./DecoratorNode.js";
 import { SubTreeNode } from "./decorators/SubtreeNode.js";
 import { parseXmlDocument } from "./xml/XmlDocument.js";
 import { fail, type Positioned } from "./xml/XmlError.js";
+import { validateInstanceName } from "./xml/nameValidation.js";
 import { toTreeObject, type TreeNodeObject, type TreeObject } from "./xml/TreeObject.js";
 import { loadSubtreeModels, type SubtreeModels } from "./xml/TreeNodesModel.js";
 import { verifyTreeObject as verify } from "./xml/verifyTree.js";
@@ -344,6 +345,7 @@ export class Parser {
     // By default, the instance name is equal to ID, unless the
     // attribute [name] is present.
     const instanceName = json.props?.name || typeId;
+    if (json.props?.name !== undefined) validateInstanceName(json.props.name, json);
 
     const manifest: TreeNodeManifest | undefined = this.factory.manifests.get(typeId);
     const { portRemap, otherAttributes } = readAttributes(json, manifest);

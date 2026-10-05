@@ -1,5 +1,6 @@
 import { NodeType } from "../basic.js";
 import { fail } from "./XmlError.js";
+import { validateModelName } from "./nameValidation.js";
 import type { TreeNodeObject, TreeObject } from "./TreeObject.js";
 
 const MAX_NESTING_DEPTH = 256;
@@ -75,6 +76,7 @@ export function verifyTreeObject(
           "The attribute [ID] of tag <SubTree> must not use the name of a registered Node"
         );
       }
+      validateModelName(id as string, node);
     } else if (name === "BehaviorTree") {
       expectChildren(node, 1);
       if (!id && behavior_tree_count > 1) {
@@ -86,6 +88,7 @@ export function verifyTreeObject(
           "The attribute [ID] of tag <BehaviorTree> must not use the name of a registered Node"
         );
       }
+      if (id) validateModelName(id, node);
     } else if (!["Sequence", "Fallback"].includes(name)) {
       // builtin node types are looked up by their ID, everything else by the
       // element name
@@ -94,6 +97,9 @@ export function verifyTreeObject(
       if (search === undefined) {
         fail(node, `Node not recognized: ${lookupName}`);
       }
+
+      // a custom node type is registered under its element name
+      if (!isBuiltin) validateModelName(name, node);
 
       if (search === NodeType.Decorator) {
         expectChildren(node, 1);

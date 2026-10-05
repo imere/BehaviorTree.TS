@@ -1,10 +1,5 @@
 import { PostCondPairs, PreCondPairs, TreeNode } from "./TreeNode.js";
-import {
-  Primitive,
-  matchPattern,
-  type AbstractConstructorType,
-  type ConstructorType,
-} from "./utils/index.js";
+import { Primitive, type AbstractConstructorType, type ConstructorType } from "./utils/index.js";
 import { now } from "./utils/date-time.js";
 
 export enum NodeType {
@@ -90,18 +85,58 @@ export class Timestamp {
   ) {}
 }
 
-const forbidPortNamePatterns: Array<string | RegExp> = ["", /^[^a-z]/i];
+// Characters that break XML serialization or cause filesystem issues
+const FORBIDDEN_CHARS = new Set([
+  " ",
+  "\t",
+  "\n",
+  "\r",
+  "<",
+  ">",
+  "&",
+  '"',
+  "'",
+  "/",
+  "\\",
+  ":",
+  "*",
+  "?",
+  "|",
+  ".",
+]);
 
+/**
+ * The first character of `name` that may not appear in a model name or a port
+ * name, or undefined when the name is clean.
+ *
+ * Bytes with the high bit set are skipped so that a UTF-8 multibyte sequence,
+ * and therefore a non-ASCII name, is accepted.
+ */
 export function findForbiddenChar(name: string): string | undefined {
-  if (name === "") return "(empty)";
-  const first = name[0];
-  if (!/^[a-z]$/i.test(first)) return `'${first}'`;
-  if (isReservedAttribute(name)) return `'${name}'`;
+  for (const c of name) {
+    const code = c.charCodeAt(0);
+    if (code >= 0x80) continue;
+    if (code < 32 || code === 127) return c;
+    if (FORBIDDEN_CHARS.has(c)) return c;
+  }
   return;
 }
 
+/**
+ * Describes a character returned by findForbiddenChar for an error message: a
+ * control character gets its ASCII code, anything else is quoted.
+ */
+export function formatForbiddenChar(c: string): string {
+  const code = c.charCodeAt(0);
+  if (code < 32 || code === 127) return `control character (ASCII ${code})`;
+  return `'${c}'`;
+}
+
 export function isAllowedPortName(name: string): boolean {
-  if (matchPattern(forbidPortNamePatterns, name)) return false;
+  if (name === "") return false;
+  // a port name cannot start with a digit
+  if (!/^[a-z]$/i.test(name[0])) return false;
+  if (findForbiddenChar(name) !== undefined) return false;
   return !isReservedAttribute(name);
 }
 
@@ -132,10 +167,8 @@ export function createPort<K extends string, V extends Primitive | { toString(th
   defaultValue?: V
 ): [K, PortInfo] {
   if (!isAllowedPortName(name)) {
-    throw new Error(
-      `Port name '${name}' contains forbidden character ${findForbiddenChar(name)}. ` +
-        `A port name must start with an alphabetic character. Underscore is reserved.`
-    );
+    const c = findForbiddenChar(name) ?? name;
+    throw new Error(`Port name '${name}' contains forbidden character ${formatForbiddenChar(c)}`);
   }
 
   return [name, createPortInfo(direction, description, defaultValue)];

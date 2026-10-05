@@ -1,5 +1,6 @@
 import { createPortInfo, PortDirection, PortList } from "../basic.js";
 import { fail } from "./XmlError.js";
+import { validatePortName } from "./nameValidation.js";
 import type { TreeNodeObject, TreeObject } from "./TreeObject.js";
 
 /** The ports one <SubTree> declares in a <TreeNodesModel>. */
@@ -47,6 +48,7 @@ function readPorts(subNode: TreeNodeObject, ports: PortList): void {
       if (!portName) {
         fail(portNode, "Missing attribute [name] in port (SubTree model)");
       }
+      validatePortName(portName, portNode);
 
       const info = createPortInfo(direction, portNode.props?.description ?? "");
       if (portNode.props?.default !== undefined) {
