@@ -77,8 +77,11 @@ export class Parser {
     this.verifyTreeObject(json, this.registeredNodeTypes());
     this.loadSubtreeModel(json);
 
+    // only <BehaviorTree> declares a tree; <TreeNodesModel> and anything else
+    // sitting under <root> is not a runnable tree
     for (const node of json.children) {
-      this.treeRoots.set(node.props?.ID || `Tree_${this.suffixCount++}`, node);
+      if (node.name !== "BehaviorTree") continue;
+      this.treeRoots.set(node.props?.ID || `BehaviorTree_${this.suffixCount++}`, node);
     }
   }
 

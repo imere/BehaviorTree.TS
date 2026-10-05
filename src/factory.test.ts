@@ -3,6 +3,7 @@ import { NodeConfig } from "./TreeNode.js";
 import { Parser } from "./Parser.js";
 import { blackboardRestore, TreeFactory } from "./TreeFactory.js";
 import { Metadata, NodeStatus, PortList, type NodeUserStatus } from "./basic.js";
+import { CrossDoor } from "./sample/CrossDoorNodes.js";
 import { SaySomething } from "./sample/DummyNodes.js";
 
 function makeTestMetadata(): Metadata {
@@ -11,6 +12,74 @@ function makeTestMetadata(): Metadata {
     ["bar", "42"],
   ]);
 }
+
+// xml_text_subtree_part1, from tests/gtest_factory.cpp
+const xmlTextSubtreePart1 = `
+<root BTTS_format="4">
+  <BehaviorTree ID="MainTree">
+    <Fallback name="root_selector">
+      <SubTree ID="DoorClosedSubtree" />
+      <Action ID="PassThroughDoor" />
+    </Fallback>
+  </BehaviorTree>
+</root>`;
+
+// xml_text_subtree_part2, from tests/gtest_factory.cpp
+const xmlTextSubtreePart2 = `
+<root BTTS_format="4">
+  <BehaviorTree ID="DoorClosedSubtree">
+    <Sequence name="door_sequence">
+      <Decorator ID="Inverter">
+        <Action ID="IsDoorClosed" />
+      </Decorator>
+      <Action ID="OpenDoor" />
+      <Action ID="PassThroughDoor" />
+    </Sequence>
+  </BehaviorTree>
+</root>`;
+
+describe("XMLParsingOrder", () => {
+  function registeredTrees(...documents: string[]): string[] {
+    const factory = new TreeFactory();
+    new CrossDoor().registerNodes(factory);
+    const parser = new Parser(factory);
+    for (const xml of documents) parser.loadFromXML(xml);
+    return parser.registeredBehaviorTrees;
+  }
+
+  test("a document holding a <TreeNodesModel> registers only its trees", () => {
+    const xml = `
+    <root BTTS_format="4" mainTreeToExecute="MainTree">
+      <BehaviorTree ID="MainTree">
+        <PassThroughDoor/>
+      </BehaviorTree>
+      <!-- TreeNodesModel is used only by the Graphic interface -->
+      <TreeNodesModel>
+        <Action ID="PassThroughDoor" />
+      </TreeNodesModel>
+    </root>`;
+
+    const factory = new TreeFactory();
+    new CrossDoor().registerNodes(factory);
+    const parser = new Parser(factory);
+    parser.loadFromXML(xml);
+    expect(parser.registeredBehaviorTrees).toEqual(["MainTree"]);
+  });
+
+  test("split across two documents, the first one registered first", () => {
+    expect(registeredTrees(xmlTextSubtreePart1, xmlTextSubtreePart2)).toEqual([
+      "MainTree",
+      "DoorClosedSubtree",
+    ]);
+  });
+
+  test("split across two documents, the second one registered first", () => {
+    expect(registeredTrees(xmlTextSubtreePart2, xmlTextSubtreePart1)).toEqual([
+      "DoorClosedSubtree",
+      "MainTree",
+    ]);
+  });
+});
 
 describe("BehaviorTreeFactory", () => {
   test("BehaviorTree.CPPIssue7_EmptyBehaviorTree", () => {
