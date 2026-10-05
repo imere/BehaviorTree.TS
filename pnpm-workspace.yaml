@@ -1,3 +1,5 @@
 allowBuilds:
   "@parcel/watcher": true
+  # transitive, through vite -> vitest; its postinstall fetches the platform binary
+  esbuild: true
   unrs-resolver: true
