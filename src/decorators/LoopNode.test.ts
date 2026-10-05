@@ -169,3 +169,115 @@ describe("LoopNode", () => {
     expect(seen).toEqual(["a", "b"]);
   });
 });
+
+describe("LoopNode.StaticIntQueue", () => {
+  it("pops every integer of a literal queue", async () => {
+    const factory = new TreeFactory();
+    const received: number[] = [];
+    factory.registerSimpleAction(
+      "RecordIntValue",
+      (node) => {
+        const val = node.getInput<number>("value");
+        if (val !== undefined) received.push(val);
+        return NodeStatus.SUCCESS;
+      },
+      new PortList([createInputPort("value")])
+    );
+
+    const tree = factory.createTreeFromXML(`
+    <root BTTS_format="4">
+       <BehaviorTree>
+          <LoopInt queue="1;2;3;4;5" value="{val}">
+            <RecordIntValue value="{val}"/>
+          </LoopInt>
+       </BehaviorTree>
+    </root>`);
+
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+    expect(received).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+describe("LoopNode.StaticDoubleQueue", () => {
+  it("pops every double of a literal queue", async () => {
+    const factory = new TreeFactory();
+    const received: number[] = [];
+    factory.registerSimpleAction(
+      "RecordDoubleValue",
+      (node) => {
+        const val = node.getInput<number>("value");
+        if (val !== undefined) received.push(val);
+        return NodeStatus.SUCCESS;
+      },
+      new PortList([createInputPort("value")])
+    );
+
+    const tree = factory.createTreeFromXML(`
+    <root BTTS_format="4">
+       <BehaviorTree>
+          <LoopDouble queue="1.5;2.5;3.5" value="{val}">
+            <RecordDoubleValue value="{val}"/>
+          </LoopDouble>
+       </BehaviorTree>
+    </root>`);
+
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+    expect(received).toEqual([1.5, 2.5, 3.5]);
+  });
+});
+
+describe("LoopNode.StaticStringQueue", () => {
+  it("pops every string of a literal queue", async () => {
+    const factory = new TreeFactory();
+    const received: string[] = [];
+    factory.registerSimpleAction(
+      "RecordStringValue",
+      (node) => {
+        const val = node.getInput<string>("value");
+        if (val !== undefined) received.push(val);
+        return NodeStatus.SUCCESS;
+      },
+      new PortList([createInputPort("value")])
+    );
+
+    const tree = factory.createTreeFromXML(`
+    <root BTTS_format="4">
+       <BehaviorTree>
+          <LoopString queue="hello;world;test" value="{val}">
+            <RecordStringValue value="{val}"/>
+          </LoopString>
+       </BehaviorTree>
+    </root>`);
+
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+    expect(received).toEqual(["hello", "world", "test"]);
+  });
+});
+
+describe("LoopNode.BoolQueue", () => {
+  it("pops every boolean of a literal queue", async () => {
+    const factory = new TreeFactory();
+    const received: boolean[] = [];
+    factory.registerSimpleAction(
+      "RecordBoolValue",
+      (node) => {
+        const val = node.getInput<boolean>("value");
+        if (val !== undefined) received.push(val);
+        return NodeStatus.SUCCESS;
+      },
+      new PortList([createInputPort("value")])
+    );
+
+    const tree = factory.createTreeFromXML(`
+    <root BTTS_format="4">
+       <BehaviorTree>
+          <LoopBool queue="true;false;true" value="{val}">
+            <RecordBoolValue value="{val}"/>
+          </LoopBool>
+       </BehaviorTree>
+    </root>`);
+
+    expect(await tree.tickWhileRunning()).toBe(NodeStatus.SUCCESS);
+    expect(received).toEqual([true, false, true]);
+  });
+});
