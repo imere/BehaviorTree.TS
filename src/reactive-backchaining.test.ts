@@ -3,6 +3,7 @@ import { ConditionNode } from "./ConditionNode.js";
 import { TreeFactory } from "./TreeFactory.js";
 import { NodeConfig } from "./TreeNode.js";
 import { NodeStatus, NodeUserStatus, PortList } from "./basic.js";
+import { TreeObserver } from "./TreeObserver.js";
 
 class SimpleCondition extends ConditionNode {
   static providedPorts(): PortList {
@@ -82,7 +83,7 @@ describe("ReactiveBackchaining", () => {
     factory.registerNodeType(AsyncTestAction, "WearJacket", "is_warm");
 
     const tree = factory.createTreeFromXML(xml_text);
-    // const observer = new TreeObserver(tree);
+    const observer = new TreeObserver(tree);
 
     const blackboard = tree.subtrees[0].blackboard;
     blackboard.set("is_warm", false);
@@ -103,13 +104,13 @@ describe("ReactiveBackchaining", () => {
     // fourth tick: still warm (just the condition ticked)
     expect(await tree.tickExactlyOnce()).toBe(NodeStatus.SUCCESS);
 
-    // expect(observer.getStatistics("warm").failure_count).toBe(3);
-    // expect(observer.getStatistics("warm").success_count).toBe(1);
+    expect(observer.getStatisticsByPath("warm").failureCount).toBe(3);
+    expect(observer.getStatisticsByPath("warm").successCount).toBe(1);
 
-    // expect(observer.getStatistics("jacket").transitions_count).toBe(3);
-    // expect(observer.getStatistics("jacket").success_count).toBe(3);
+    expect(observer.getStatisticsByPath("jacket").transitionsCount).toBe(3);
+    expect(observer.getStatisticsByPath("jacket").successCount).toBe(3);
 
-    // expect(observer.getStatistics("wear").success_count).toBe(1);
+    expect(observer.getStatisticsByPath("wear").successCount).toBe(1);
   });
 });
 

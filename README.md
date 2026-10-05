@@ -53,6 +53,7 @@ const { TreeFactory } = require("behavior-tree-ts"); // build/dist/index.cjs
 # Experimental syntax for entries in the root blackboard
 - <Script code=" @value=1 " />
 + <Script code=" _B_value=1 " />
+```
 
 ## License
 
