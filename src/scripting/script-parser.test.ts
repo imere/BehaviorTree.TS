@@ -335,6 +335,39 @@ describe("ScriptExpression", () => {
     expect(supportScriptExpression("123;")).toBe("123;");
   });
 
+  test("MultipleStatements", () => {
+    const env: Environment = [Blackboard.create(), new Map()];
+
+    const context = createTreeExecutionContext(env);
+
+    const Parse = (script: string) =>
+      Runtime.runInContext(context, supportScriptExpression(script));
+
+    const variables = env[0];
+
+    // Multiple semicolons
+    Parse("x=1;;; y=2;;");
+    expect(variables.get("x")).toBe(1);
+    expect(variables.get("y")).toBe(2);
+
+    // Last expression is the return value
+    expect(Parse("x=10; y=20; x+y")).toBe(30);
+  });
+
+  test("ASemicolonInsideALiteralOrBlockIsNotAStatementSeparator", () => {
+    const env: Environment = [Blackboard.create(), new Map()];
+    const context = createTreeExecutionContext(env);
+    const Parse = (script: string) =>
+      Runtime.runInContext(context, supportScriptExpression(script));
+
+    expect(Parse("text='a;b'; text")).toBe("a;b");
+    // the ; of a for loop header is nested inside (), so the body is the last
+    // statement and the result is whatever the body assigns
+    Parse("total=0");
+    Parse("for(var i=1; i<4; i++) { total+=i }");
+    expect(env[0].get("total")).toBe(6);
+  });
+
   test("Brackets", () => {
     expect(supportScriptExpression("{123}")).toBe("{123}");
   });

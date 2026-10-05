@@ -27,12 +27,71 @@ export function parseScriptAndExecute<R = any>(env: Environment, script: string)
   return parseScript(script)?.(env);
 }
 
+const DECLARATION = /^(let|const|var|function|class)\b/;
+
+/**
+ * Turns a script into a function body. Upstream parses the script into a list of
+ * statements, evaluates all of them and returns the value of the last one, so a
+ * comma- or semicolon-separated script yields its final expression. The
+ * comma-separated form JavaScript already does, because `a,b` evaluates to `b`.
+ * A semicolon-separated one does not, so the last statement is returned
+ * explicitly.
+ */
 export function supportScriptExpression(script: string): string {
   if (!script.trim()) return "";
   if (script.includes("return ")) return script;
   if (/{.+}/s.test(script)) return script;
-  if (script.includes(";")) return script;
-  return `return (${script})`;
+  if (!script.includes(";")) return `return (${script})`;
+
+  const statements = splitStatements(script);
+  const last = statements.pop();
+  if (last === undefined || last === "" || DECLARATION.test(last.trim())) {
+    return script;
+  }
+  return `${statements.join(";\n")};\nreturn (${last});`;
+}
+
+/**
+ * Splits on the semicolons that separate top-level statements, ignoring the ones
+ * inside string literals and inside (), [] or {}.
+ */
+function splitStatements(script: string): string[] {
+  const statements: string[] = [];
+  let current = "";
+  let depth = 0;
+  let quote: string | undefined;
+
+  for (let i = 0; i < script.length; i++) {
+    const c = script[i];
+
+    if (quote) {
+      current += c;
+      if (c === "\\") {
+        current += script[++i] ?? "";
+      } else if (c === quote) {
+        quote = undefined;
+      }
+      continue;
+    }
+
+    if (c === "'" || c === '"' || c === "`") {
+      quote = c;
+      current += c;
+      continue;
+    }
+
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") depth--;
+
+    if (c === ";" && depth === 0) {
+      statements.push(current);
+      current = "";
+      continue;
+    }
+    current += c;
+  }
+  statements.push(current);
+  return statements;
 }
 
 export function createReturnFunction<T = unknown>(returns: T): () => T {
