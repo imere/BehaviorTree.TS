@@ -14,6 +14,34 @@ function makeTestMetadata(): Metadata {
   ]);
 }
 
+// xml_text_subtree, from tests/gtest_factory.cpp
+const xmlTextSubtree = `
+<root BTTS_format="4" mainTreeToExecute="MainTree" >
+
+    <BehaviorTree ID="MainTree">
+        <Sequence>
+            <Fallback>
+                <Inverter>
+                    <IsDoorClosed/>
+                </Inverter>
+                <SubTree ID="DoorClosedSubtree"/>
+            </Fallback>
+            <PassThroughDoor/>
+        </Sequence>
+    </BehaviorTree>
+
+    <BehaviorTree ID="DoorClosedSubtree">
+        <Fallback>
+            <OpenDoor/>
+            <RetryUntilSuccessful num_attempts="5">
+                <PickLock/>
+            </RetryUntilSuccessful>
+            <SmashDoor/>
+        </Fallback>
+    </BehaviorTree>
+
+</root>`;
+
 // xml_text_subtree_part1, from tests/gtest_factory.cpp
 const xmlTextSubtreePart1 = `
 <root BTTS_format="4">
@@ -65,6 +93,10 @@ describe("XMLParsingOrder", () => {
     const parser = new Parser(factory);
     parser.loadFromXML(xml);
     expect(parser.registeredBehaviorTrees).toEqual(["MainTree"]);
+  });
+
+  test("both trees of a subtree document are registered", () => {
+    expect(registeredTrees(xmlTextSubtree)).toEqual(["MainTree", "DoorClosedSubtree"]);
   });
 
   test("split across two documents, the first one registered first", () => {
